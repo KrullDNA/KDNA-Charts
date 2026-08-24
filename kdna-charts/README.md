@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 4 of 13, SVG renderer, line and area
+- **Build stage:** 5 of 13, annotation layer
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -33,7 +33,8 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | Diagnostic dump at `?kdna_debug=1` | 3 | Done |
 | SVG renderer, line and area, with the gradient fill | 4 | Done |
 | Preview meta box on the chart edit screen | 4 | Temporary, replaced at Stage 8 |
-| Annotation layer | 5 | Stored, not drawn yet |
+| Annotation layer: markers, points, callouts, leaders, notes | 5 | Done |
+| Label collision avoidance | 5 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -259,6 +260,70 @@ measurement fills as a single shape with no seam at the join, while
 each segment keeps its own line character. Where two segments share an
 endpoint the repeated point is dropped.
 
+## The annotation layer
+
+The editorial vocabulary, and the reason this plugin exists rather than
+a Chart.js wrapper. Markers with headings, emphasised points with
+labels, large number callouts with leader lines and span brackets, and
+free floating notes.
+
+Every other charting plugin makes these somebody's job to position by
+hand in pixel coordinates. Here they are placed by the renderer, from a
+definition that says what a callout means and what it points at, never
+where it should sit.
+
+### Two problems the layer has to solve
+
+**PHP cannot measure text.** Font sizes live in CSS as custom
+properties, and there is no text metric server side, so every box is an
+estimate from a character count and an assumed size. The assumed sizes
+match the stylesheet's defaults exactly and sit in one constant so the
+two can be checked against each other. Bold text gets a wider figure
+than regular, because the difference is enough to make a heading
+reserve less room than the words drawn in it.
+
+**Annotations collide.** A note and a marker heading both want the
+space above the plot. So nothing is placed blindly:
+
+- Labels whose position the author fixed get nudged clear, trying the
+  preferred direction, then the opposite one. Notes may also step
+  sideways; marker headings may not, because sliding one along the top
+  detaches it from the line it names.
+- Callouts carry a leader line and can therefore sit anywhere and still
+  be understood. That freedom is what lets them be *placed* rather than
+  nudged: eight directions at two distances are scored on what each
+  would cover, and the best wins. Covering the line the callout is
+  describing is the worst outcome, covering another annotation nearly
+  as bad, and distance from the anchor a mild cost that breaks ties.
+- The axis tick labels are seeded into the occupied list before any
+  annotation is placed, so nothing lands on a tick.
+
+**Nothing is ever dropped for want of space.** A label that cannot find
+clear air is drawn in the least bad position, because a missing
+annotation is a missing argument and silence is the worst outcome.
+
+### Layer order
+
+Marker lines are drawn *under* the data. A dashed rule over the series
+would cut through the very shape the reader is following. Everything
+else in the layer is drawn last, over everything, because a callout
+covered by a gridline is a callout nobody reads.
+
+### Span brackets
+
+A callout anchored to a span draws a bracket: a rule standing off the
+two anchor points with a tick turned in at each end, and a stem from
+its middle to the figure. The bracket takes the perpendicular facing
+the callout, so the stem never crosses the span it is bracketing. That
+is what makes a figure read as describing a range rather than a moment.
+
+### The description carries the argument
+
+The accessible description names the turning points, the callout
+figures and the notes, not just the shape of the line. Without it a
+screen reader hears that a line fell from 108 to 52 and never learns
+that thirty per cent of it went in the first five years.
+
 ## File structure so far
 
 ```
@@ -273,6 +338,7 @@ kdna-charts/
 │   ├── class-kdna-charts-scale.php
 │   ├── class-kdna-charts-renderer.php
 │   ├── class-kdna-charts-renderer-svg.php
+│   ├── class-kdna-charts-annotations.php
 │   ├── class-kdna-charts-editor.php
 │   └── class-kdna-charts-admin.php
 ├── templates/
@@ -289,6 +355,30 @@ kdna-charts/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 5
+
+The acceptance test for this stage is the reference design.
+
+1. Open the collagen chart's preview. Every annotation in the file
+   should now be drawn.
+2. Confirm the dashed **Menopause** marker runs the height of the plot
+   at Year 0, with its heading above, and that the series line crosses
+   *over* the marker rather than under it.
+3. Confirm three emphasised points: hollow at Year 0, filled at 5,
+   hollow at 20 with **about 52% remaining** to its left.
+4. Confirm **-30%** with **in the first five years** beneath it, and a
+   bracket standing off the fall from Year 0 to Year 5 with a stem to
+   the figure.
+5. Confirm **-2% a year** with **for the next fifteen**, and no leader,
+   which is what the file asks for.
+6. Confirm the note appears, wrapped onto two lines, clear of the
+   Menopause heading. It asked to sit where the heading is, and moved.
+7. Delete the marker from a copy of the file and re-import. The note
+   should now sit where it originally asked to.
+8. Narrow the browser. Nothing should collide at any width.
+9. View source and confirm no colour, stroke width or font size in the
+   markup. The only `fill=` is the gradient reference.
 
 ## Testing Stage 4
 

@@ -58,6 +58,9 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	/** @var KDNA_Charts_Scale|null */
 	protected $scale;
 
+	/** @var KDNA_Charts_Annotations|null */
+	protected $annotations;
+
 	public function engine() {
 		return 'svg';
 	}
@@ -97,15 +100,31 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			return $this->placeholder( __( 'This chart type has no axes to draw against.', 'kdna-charts' ) );
 		}
 
+		$this->annotations = KDNA_Charts_Schema::draws_annotations( $this->type() )
+			? new KDNA_Charts_Annotations( $this->definition, $this->scale, $this->uid )
+			: null;
+
 		$title_id = $this->id( 'title' );
 		$desc_id  = $this->id( 'desc' );
 
+		/*
+		 * The order is the drawing order, and two of these are placed
+		 * where they are for a reason.
+		 *
+		 * Marker lines go under the data, because a dashed rule drawn
+		 * over the series would cut through the very shape the reader is
+		 * following. Everything else in the annotation layer goes last,
+		 * over everything, because a callout covered by a gridline is a
+		 * callout nobody reads.
+		 */
 		$layers = array(
 			$this->render_defs(),
 			$this->render_gridlines(),
+			$this->annotations ? $this->annotations->render_under() : '',
 			$this->render_series(),
 			$this->render_axis_labels(),
 			$this->render_axis_titles(),
+			$this->annotations ? $this->annotations->render_over() : '',
 		);
 
 		$svg = self::tag(
@@ -496,6 +515,24 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			),
 			implode( '', $titles )
 		);
+	}
+
+	/**
+	 * The annotation layer in words, for the accessible description.
+	 *
+	 * Built from the definition rather than the annotation object,
+	 * because the description is assembled before the chart is drawn.
+	 */
+	protected function describe_annotations() {
+		if ( ! KDNA_Charts_Schema::draws_annotations( $this->type() ) ) {
+			return '';
+		}
+		$scale = KDNA_Charts_Scale::for_chart( $this->definition );
+		if ( ! $scale instanceof KDNA_Charts_Scale ) {
+			return '';
+		}
+		$annotations = new KDNA_Charts_Annotations( $this->definition, $scale, $this->uid );
+		return $annotations->describe();
 	}
 
 	/*

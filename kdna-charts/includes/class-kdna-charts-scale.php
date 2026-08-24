@@ -335,6 +335,17 @@ class KDNA_Charts_Scale {
 		}
 
 		/*
+		 * A marker heading sits outside the plot at the end of its line,
+		 * so the edge it sits against has to be deep enough to hold it.
+		 * Without this the heading is placed half off the canvas and the
+		 * annotation layer spends its effort rescuing it.
+		 */
+		$heading = self::EDGE_INSET + self::ASSUMED_LABEL_SIZE * self::LABEL_LINE_HEIGHT + 12;
+		foreach ( $this->marker_label_edges() as $edge ) {
+			$padding[ $edge ] = max( $padding[ $edge ], $heading );
+		}
+
+		/*
 		 * The last x tick label is centred on the right edge of the plot,
 		 * so half of it hangs past. Without this the final label on a
 		 * chart running to its own maximum is cut off by the canvas.
@@ -358,6 +369,41 @@ class KDNA_Charts_Scale {
 		}
 
 		return $padding;
+	}
+
+	/**
+	 * Which edges of the plot carry a marker heading.
+	 *
+	 * Vertical markers head their lines at the top by default, so a
+	 * chart with one needs a deeper top margin whether or not it says
+	 * so. Horizontal markers head theirs inside the plot and cost
+	 * nothing.
+	 *
+	 * @return string[] Any of 'top' and 'bottom'.
+	 */
+	private function marker_label_edges() {
+		$markers = $this->definition['markers'] ?? array();
+		if ( ! is_array( $markers ) ) {
+			return array();
+		}
+
+		$edges = array();
+		foreach ( $markers as $marker ) {
+			if ( ! is_array( $marker ) ) {
+				continue;
+			}
+			if ( 'vertical' !== ( $marker['type'] ?? '' ) ) {
+				continue;
+			}
+			if ( '' === trim( (string) ( $marker['label'] ?? '' ) ) ) {
+				continue;
+			}
+			$edge = ( 'bottom' === ( $marker['label_position'] ?? 'top' ) ) ? 'bottom' : 'top';
+			if ( ! in_array( $edge, $edges, true ) ) {
+				$edges[] = $edge;
+			}
+		}
+		return $edges;
 	}
 
 	/**

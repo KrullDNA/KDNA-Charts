@@ -118,6 +118,49 @@
 	--kdna-chart-source-align: left;
 	--kdna-chart-source-margin: 0.5rem 0 0;
 
+	/* Markers */
+	--kdna-chart-marker-colour: #6b7a75;
+	--kdna-chart-marker-width: 2px;
+	--kdna-chart-marker-dash-dashed: 10px 8px;
+	--kdna-chart-marker-dash-dotted: 2px 8px;
+	--kdna-chart-marker-label-size: 20px;
+	--kdna-chart-marker-label-weight: 600;
+	--kdna-chart-marker-label-colour: #14332c;
+	--kdna-chart-marker-label-letter-spacing: 0.04em;
+	--kdna-chart-marker-label-transform: none;
+
+	/* Emphasised data points */
+	--kdna-chart-point-radius: 9px;
+	--kdna-chart-point-colour: #14332c;
+	--kdna-chart-point-fill-hollow: #fff;
+	--kdna-chart-point-stroke-width: 3.5px;
+	--kdna-chart-point-label-size: 20px;
+	--kdna-chart-point-label-weight: 500;
+	--kdna-chart-point-label-colour: #4a5f58;
+
+	/* Callouts */
+	--kdna-chart-callout-value-size-large: 56px;
+	--kdna-chart-callout-value-size-small: 34px;
+	--kdna-chart-callout-value-weight: 700;
+	--kdna-chart-callout-value-colour: #14332c;
+	--kdna-chart-callout-value-letter-spacing: -0.02em;
+	--kdna-chart-callout-caption-size: 20px;
+	--kdna-chart-callout-caption-weight: 400;
+	--kdna-chart-callout-caption-colour: #6b7a75;
+
+	/* Leader lines and span brackets */
+	--kdna-chart-leader-colour: #9aa8a3;
+	--kdna-chart-leader-width: 1.75px;
+	--kdna-chart-leader-dash: none;
+	--kdna-chart-bracket-colour: #9aa8a3;
+	--kdna-chart-bracket-width: 1.75px;
+
+	/* Notes */
+	--kdna-chart-note-size: 20px;
+	--kdna-chart-note-weight: 400;
+	--kdna-chart-note-colour: #8a968f;
+	--kdna-chart-note-style: italic;
+
 	/* Placeholder, editors only */
 	--kdna-chart-placeholder-background: #f6f7f7;
 	--kdna-chart-placeholder-border: #dcdcde;
@@ -330,6 +373,120 @@
 }
 
 /* ---------------------------------------------------------------------
+ * The annotation layer
+ *
+ * The sizes here are not free. The annotation renderer reserves space
+ * from the same numbers to work out where a label can sit and whether
+ * two of them collide, since PHP cannot measure text the browser has
+ * not drawn yet. Changing one of these sizes a little is fine, the
+ * placement simply becomes slightly generous or slightly tight.
+ * Changing one a lot needs the matching control at Stage 9.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__marker {
+	fill: none;
+	stroke: var( --kdna-chart-marker-colour, #6b7a75 );
+	stroke-width: var( --kdna-chart-marker-width, 2px );
+}
+
+.kdna-chart__marker--solid {
+	stroke-dasharray: none;
+}
+
+.kdna-chart__marker--dashed {
+	stroke-dasharray: var( --kdna-chart-marker-dash-dashed, 10px 8px );
+}
+
+.kdna-chart__marker--dotted {
+	stroke-dasharray: var( --kdna-chart-marker-dash-dotted, 2px 8px );
+	stroke-linecap: round;
+}
+
+.kdna-chart__marker-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-marker-label-size, 20px );
+	font-weight: var( --kdna-chart-marker-label-weight, 600 );
+	letter-spacing: var( --kdna-chart-marker-label-letter-spacing, 0.04em );
+	text-transform: var( --kdna-chart-marker-label-transform, none );
+	fill: var( --kdna-chart-marker-label-colour, #14332c );
+}
+
+/*
+ * The radius is a geometry property, so CSS can set it and a site can
+ * size its points. The renderer also writes an r attribute, which CSS
+ * overrides whenever it loads. That is deliberate: a circle with no
+ * radius is nothing at all, and a stylesheet that failed should cost a
+ * chart its polish rather than its data.
+ */
+.kdna-chart__point {
+	r: var( --kdna-chart-point-radius, 9px );
+	fill: var( --kdna-chart-point-colour, #14332c );
+	stroke: none;
+}
+
+/*
+ * A hollow point is filled with the page rather than left transparent,
+ * so the line does not run through the middle of it.
+ */
+.kdna-chart__point--hollow {
+	fill: var( --kdna-chart-point-fill-hollow, #fff );
+	stroke: var( --kdna-chart-point-colour, #14332c );
+	stroke-width: var( --kdna-chart-point-stroke-width, 3.5px );
+}
+
+.kdna-chart__point-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-point-label-size, 20px );
+	font-weight: var( --kdna-chart-point-label-weight, 500 );
+	fill: var( --kdna-chart-point-label-colour, #4a5f58 );
+}
+
+.kdna-chart__callout-value {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-callout-value-size-large, 56px );
+	font-weight: var( --kdna-chart-callout-value-weight, 700 );
+	letter-spacing: var( --kdna-chart-callout-value-letter-spacing, -0.02em );
+	fill: var( --kdna-chart-callout-value-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-chart__callout-value--small {
+	font-size: var( --kdna-chart-callout-value-size-small, 34px );
+}
+
+.kdna-chart__callout-caption {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-callout-caption-size, 20px );
+	font-weight: var( --kdna-chart-callout-caption-weight, 400 );
+	fill: var( --kdna-chart-callout-caption-colour, #6b7a75 );
+}
+
+.kdna-chart__leader {
+	fill: none;
+	stroke: var( --kdna-chart-leader-colour, #9aa8a3 );
+	stroke-width: var( --kdna-chart-leader-width, 1.75px );
+	stroke-dasharray: var( --kdna-chart-leader-dash, none );
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.kdna-chart__bracket {
+	fill: none;
+	stroke: var( --kdna-chart-bracket-colour, #9aa8a3 );
+	stroke-width: var( --kdna-chart-bracket-width, 1.75px );
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.kdna-chart__note {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-note-size, 20px );
+	font-weight: var( --kdna-chart-note-weight, 400 );
+	font-style: var( --kdna-chart-note-style, italic );
+	fill: var( --kdna-chart-note-colour, #8a968f );
+}
+
+/* ---------------------------------------------------------------------
  * Caption and source
  * ------------------------------------------------------------------ */
 
@@ -399,6 +556,17 @@
  *   .kdna-chart__axis-label--x / --y
  *   .kdna-chart__axis-title--x / --y
  *   .kdna-chart__area--{emphasis}
+ *   .kdna-chart__markers        all marker lines
+ *   .kdna-chart__annotations    everything drawn over the plot
+ *   .kdna-chart__callouts       all callouts and their leaders
+ *   .kdna-chart__marker--{orientation}
+ *   .kdna-chart__marker-label--{orientation} / --{position}
+ *   .kdna-chart__point--filled / --none
+ *   .kdna-chart__point-label--{position}
+ *   .kdna-chart__callout-value--large
+ *   .kdna-chart__callout-caption--{size}
+ *   .kdna-chart__leader--{style}
+ *   .kdna-chart__note--{align}
  *
  * Anything that actually paints is declared above. If a class appears
  * in the markup, is not on this list, and has no rule, that is a bug.
@@ -454,6 +622,10 @@
 	.kdna-chart__frame {
 		--kdna-chart-axis-label-size: 24px;
 		--kdna-chart-axis-title-size: 24px;
+		--kdna-chart-marker-label-size: 24px;
+		--kdna-chart-point-label-size: 24px;
+		--kdna-chart-note-size: 24px;
+		--kdna-chart-callout-caption-size: 24px;
 		--kdna-chart-line-width-strong: 4px;
 		--kdna-chart-line-width-normal: 3px;
 		--kdna-chart-line-width-muted: 2.5px;
@@ -469,6 +641,11 @@
 	.kdna-chart__frame {
 		--kdna-chart-axis-label-size: 24px;
 		--kdna-chart-axis-title-size: 24px;
+		--kdna-chart-marker-label-size: 26px;
+		--kdna-chart-point-label-size: 26px;
+		--kdna-chart-note-size: 26px;
+		--kdna-chart-callout-caption-size: 26px;
+		--kdna-chart-callout-value-size-large: 64px;
 		--kdna-chart-line-width-strong: 5.5px;
 		--kdna-chart-line-width-normal: 4.5px;
 		--kdna-chart-line-width-muted: 3.5px;

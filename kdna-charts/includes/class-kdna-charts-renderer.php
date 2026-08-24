@@ -307,6 +307,17 @@ abstract class KDNA_Charts_Renderer {
 			$sentences[] = $series_sentence;
 		}
 
+		/*
+		 * The annotations are the argument the chart is making, so a
+		 * reader who cannot see it should still get it. Without this the
+		 * description says a line fell from 108 to 52 and never mentions
+		 * that thirty per cent of it went in the first five years.
+		 */
+		$annotations = $this->describe_annotations();
+		if ( '' !== $annotations ) {
+			$sentences[] = $annotations;
+		}
+
 		$source = trim( (string) ( $this->definition['source'] ?? '' ) );
 		if ( '' !== $source ) {
 			$sentences[] = sprintf(
@@ -317,6 +328,15 @@ abstract class KDNA_Charts_Renderer {
 		}
 
 		return implode( ' ', $sentences );
+	}
+
+	/**
+	 * The annotation layer in words. Engines that cannot draw
+	 * annotations return nothing, so the description never promises
+	 * something the picture does not show.
+	 */
+	protected function describe_annotations() {
+		return '';
 	}
 
 	/**
@@ -504,7 +524,7 @@ abstract class KDNA_Charts_Renderer {
 	 * @param array  $modifiers Modifier names, empty ones skipped.
 	 * @return string
 	 */
-	protected static function css( $element, array $modifiers = array() ) {
+	public static function css( $element, array $modifiers = array() ) {
 		$base    = '' === $element ? self::CSS_BLOCK : self::CSS_BLOCK . '__' . $element;
 		$classes = array( $base );
 
@@ -519,7 +539,7 @@ abstract class KDNA_Charts_Renderer {
 	}
 
 	/** A unique id within this render, for aria targets and gradient references. */
-	protected function id( $suffix ) {
+	public function id( $suffix ) {
 		return $this->uid . '-' . sanitize_html_class( (string) $suffix );
 	}
 }

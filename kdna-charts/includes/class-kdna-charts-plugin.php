@@ -16,6 +16,7 @@ require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-schema.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-cpt.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-data.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-scale.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-annotations.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer-svg.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-import.php';
