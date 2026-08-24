@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 3 of 13, scale and axis engine
+- **Build stage:** 4 of 13, SVG renderer, line and area
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -31,6 +31,9 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | `docs/chart-schema.md`, printed on the import screen with a copy button | 2 | Done |
 | Scale engine: plot area, domains, ticks, path geometry | 3 | Done |
 | Diagnostic dump at `?kdna_debug=1` | 3 | Done |
+| SVG renderer, line and area, with the gradient fill | 4 | Done |
+| Preview meta box on the chart edit screen | 4 | Temporary, replaced at Stage 8 |
+| Annotation layer | 5 | Stored, not drawn yet |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -191,6 +194,71 @@ beside the coordinate it maps to, with the path string built from it.
 Administrators only. A chart definition is not secret, but a debug
 endpoint anybody can call on any post id is a fishing tool.
 
+## The renderer
+
+Charts are rendered in PHP, so the markup arrives inside the page HTML
+and needs no JavaScript to appear. Every mark is a real DOM element
+with real classes.
+
+**Not one colour, stroke width or font size is written into the
+markup.** That is the whole architecture rather than a tidiness rule.
+Because the renderer emits geometry and classes only, the Stage 9
+cascade can change how every chart on a site looks by setting custom
+properties on a wrapper, with nothing re-rendering and no chart data
+touched. A chart that says nothing about its own colours inherits the
+site palette automatically, because an unset property falls through to
+the fallback in `assets/css/kdna-charts.css`.
+
+The one apparent exception is `fill="url(#gradient)"` on an area path.
+That is a reference to a definition, not a colour: the stops inside the
+gradient read theirs from custom properties like everything else.
+
+There is a test that asserts this, listing every attribute that could
+carry an appearance value and failing if any of them appears.
+
+### Where the layout decisions live
+
+**Text is positioned by baseline, not by arithmetic.** Font sizes are
+in CSS, so PHP does not know how tall a label is and cannot offset one
+by half its height. Alignment is done with `text-anchor` and
+`dominant-baseline`, which resolve at paint time when the size is known.
+
+**Padding is sized from the labels.** An edge with no labels and no
+title keeps the minimum; an edge carrying a long y label reserves room
+for it. That means the tick values have to be settled before the
+padding, the padding before the plot area, and the tick positions after
+the plot area. The scale engine cuts that loop by separating what a
+tick says from where it sits.
+
+**Axis titles anchor to the canvas edge**, not a fixed distance beyond
+the tick labels. The canvas edge is a known point; the far side of a
+label is not, because PHP cannot measure text the browser has not
+drawn. Anchoring to the plot is what makes a title collide with its
+labels the moment a site raises the label size.
+
+**The one place PHP and CSS have to agree** is how much room a label
+needs. The padding reserves for a label at 24 user units, which is the
+largest size the shipped stylesheet grows one to in a narrow container.
+At the 18 unit default there is room to spare. A site that raises the
+label size past 24 has to raise the padding with it, which is what the
+padding controls at Stage 9 are for.
+
+**Charts respond to their own width, not the window's.** Text inside a
+viewBox scales with the chart, so a chart at half width has labels at
+half size. Container queries put the size back based on how wide the
+chart actually is, because a chart in a narrow sidebar of a wide page
+has exactly the same problem as a chart on a phone. Viewport media
+queries are kept first as a fallback for anything without container
+query support.
+
+### The area fill
+
+One fill per series, built from all its segments joined, rather than
+one per segment. A line made of a dotted projection and a solid
+measurement fills as a single shape with no seam at the join, while
+each segment keeps its own line character. Where two segments share an
+endpoint the repeated point is dropped.
+
 ## File structure so far
 
 ```
@@ -203,17 +271,51 @@ kdna-charts/
 │   ├── class-kdna-charts-import.php
 │   ├── class-kdna-charts-data.php
 │   ├── class-kdna-charts-scale.php
+│   ├── class-kdna-charts-renderer.php
+│   ├── class-kdna-charts-renderer-svg.php
+│   ├── class-kdna-charts-editor.php
 │   └── class-kdna-charts-admin.php
 ├── templates/
 │   ├── admin-add-new-placeholder.php
-│   └── admin-editor-import.php
+│   ├── admin-editor-import.php
+│   ├── render-caption.php
+│   ├── render-source.php
+│   └── render-placeholder.php
 ├── assets/
 │   └── css/
-│       └── kdna-admin.css
+│       ├── kdna-admin.css
+│       └── kdna-charts.css
 ├── docs/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 4
+
+The first stage with something to look at.
+
+1. Open the collagen chart from All Charts. A **Preview** box sits at
+   the top of the edit screen with the chart drawn in it.
+2. Confirm the line runs from top left down to bottom right, with the
+   part before Year 0 dotted and faint and the part after solid and
+   dark. That is one series in two segments.
+3. Confirm the area beneath the line is filled with a gradient that
+   fades downward, and that it is one continuous shape with no seam at
+   Year 0.
+4. Confirm one solid gridline at 100% and two dotted ones at 75 and 50,
+   which is exactly what the file asks for.
+5. Confirm Year 0, 5 and 20 are dark and 10 and 15 are faint.
+6. Confirm both axis titles appear, the y one running bottom to top,
+   and that neither overlaps its tick labels.
+7. Narrow the browser to phone width. The labels should grow relative
+   to the chart rather than shrinking away, and nothing should collide.
+8. Turn JavaScript off and reload. The chart must be unchanged.
+9. View source and search for `fill=`, `stroke=` and `font-size=`. The
+   only match should be the `fill="url(#...)"` on the area path.
+10. Confirm the annotations are not drawn yet. The marker, callouts and
+    notes arrive at Stage 5, and the preview says so beneath the chart.
+11. Put two charts on one page and confirm neither steals the other's
+    gradient.
 
 ## Testing Stage 3
 
@@ -247,7 +349,7 @@ stage is checked.
    and the two copy buttons appear.
 2. Import `collagen-decline-chart.json`. It should create a draft chart
    and land on its edit screen with a green summary reading that
-   nothing was ignored, dropped or repaired, with 11 data points and 6
+   nothing was ignored, dropped or repaired, with 8 data points and 7
    annotations.
 3. Import the same file again. The summary should say it is the same
    chart as the one already in the library, and link to it.

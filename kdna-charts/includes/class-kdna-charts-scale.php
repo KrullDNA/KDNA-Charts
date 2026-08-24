@@ -57,19 +57,50 @@ class KDNA_Charts_Scale {
 	const PRECISION = 2;
 
 	/**
-	 * Plot area padding, in canvas units, before any allowance for axis
-	 * titles. Stage 9 turns these into style controls; until then they
-	 * are the starting point and the renderer may override them.
+	 * The least padding an edge ever gets, in canvas units. Edges that
+	 * carry labels or a title work out how much more they need.
 	 */
-	const PADDING_DEFAULTS = array(
+	const PADDING_MINIMUM = array(
 		'top'    => 40,
 		'right'  => 32,
-		'bottom' => 48,
-		'left'   => 56,
+		'bottom' => 40,
+		'left'   => 32,
 	);
 
-	/** Extra room along an edge that carries an axis title. */
-	const AXIS_TITLE_SPACE = 26;
+	/** Room along an edge that carries an axis title. */
+	const AXIS_TITLE_SPACE = 30;
+
+	/** Breathing room between anything and the edge of the canvas. */
+	const EDGE_INSET = 10;
+
+	/** Gap between the plot edge and its tick labels. */
+	const TICK_LABEL_GAP_X = 20;
+	const TICK_LABEL_GAP_Y = 14;
+
+	/**
+	 * What the padding assumes a tick label costs.
+	 *
+	 * ── The one place PHP and CSS have to agree ────────────────────
+	 *
+	 * Label sizes live in the stylesheet as custom properties, so this
+	 * class cannot measure a label: it does not know what size the
+	 * browser will draw it at, and there is no text metric available in
+	 * PHP anyway. But padding decides the plot geometry and has to be
+	 * settled here.
+	 *
+	 * So the padding reserves room for a label at 24 units, which is the
+	 * largest size the shipped stylesheet ever grows one to in a narrow
+	 * container. At the 18 unit default there is room to spare, and at
+	 * the narrow end it fits exactly.
+	 *
+	 * A site that raises the label size past 24 has to raise the padding
+	 * with it, which is what the padding controls at Stage 9 are for.
+	 * The character width is for tabular digits, which is what the axis
+	 * labels are set in.
+	 */
+	const ASSUMED_LABEL_SIZE = 24;
+	const LABEL_CHAR_WIDTH   = 0.62;
+	const LABEL_LINE_HEIGHT  = 1.25;
 
 	/** How many ticks nice number generation aims for. */
 	const DEFAULT_TICK_TARGET = 6;
@@ -166,20 +197,31 @@ class KDNA_Charts_Scale {
 			? max( 2, (int) $overrides['tick_target'] )
 			: self::DEFAULT_TICK_TARGET;
 
+		/*
+		 * The order matters, and it is a loop that has to be cut in the
+		 * right place. Padding depends on how wide the tick labels are,
+		 * tick positions depend on the plot area, and the plot area
+		 * depends on the padding.
+		 *
+		 * It is cut by separating what a tick says from where it sits.
+		 * Values and labels need only the domain, so they are settled
+		 * first; the padding is sized from them; the plot area follows;
+		 * and the positions are filled in last.
+		 */
 		$scale->canvas     = $scale->resolve_canvas( $overrides );
-		$scale->padding    = $scale->resolve_padding( $overrides );
-		$scale->plot       = $scale->resolve_plot_area();
 		$scale->categories = $scale->resolve_categories();
 
-		// Domains have to settle before ticks, because generated ticks
-		// come from the domain. Explicit ticks feed back the other way,
-		// so they are collected first and folded into the inference.
 		$scale->x_domain = $scale->resolve_domain( 'x' );
 		$scale->y_domain = $scale->resolve_domain( 'y' );
 		$scale->baseline = $scale->resolve_baseline();
 
-		$scale->x_ticks = $scale->resolve_ticks( 'x' );
-		$scale->y_ticks = $scale->resolve_ticks( 'y' );
+		$scale->x_ticks = $scale->resolve_tick_values( 'x' );
+		$scale->y_ticks = $scale->resolve_tick_values( 'y' );
+
+		$scale->padding = $scale->resolve_padding( $overrides );
+		$scale->plot    = $scale->resolve_plot_area();
+
+		$scale->position_ticks();
 
 		return $scale;
 	}
@@ -258,18 +300,49 @@ class KDNA_Charts_Scale {
 	}
 
 	/**
-	 * Padding, with extra room along any edge carrying an axis title.
-	 * A chart with no axis titles gets its space back rather than
-	 * reserving room for text that is not there.
+	 * Padding, sized from what each edge actually has to hold.
+	 *
+	 * An edge with no labels and no title keeps the minimum. An edge
+	 * carrying tick labels reserves room for the longest of them, and
+	 * one carrying a title reserves room for that too. A chart with no
+	 * axis titles gets the space back rather than every chart carrying
+	 * a margin for text that may not be there.
 	 */
 	private function resolve_padding( array $overrides ) {
-		$padding = self::PADDING_DEFAULTS;
+		$padding = self::PADDING_MINIMUM;
 
-		if ( '' !== (string) ( $this->definition['axes']['y']['label'] ?? '' ) ) {
+		$has_y_title = '' !== (string) ( $this->definition['axes']['y']['label'] ?? '' );
+		$has_x_title = '' !== (string) ( $this->definition['axes']['x']['label'] ?? '' );
+
+		$y_label_width = $this->widest_label( $this->y_ticks );
+		if ( $y_label_width > 0 ) {
+			$padding['left'] = max(
+				$padding['left'],
+				self::EDGE_INSET + ( $has_y_title ? self::AXIS_TITLE_SPACE : 0 ) + $y_label_width + self::TICK_LABEL_GAP_X
+			);
+		} elseif ( $has_y_title ) {
 			$padding['left'] += self::AXIS_TITLE_SPACE;
 		}
-		if ( '' !== (string) ( $this->definition['axes']['x']['label'] ?? '' ) ) {
+
+		$label_height = self::ASSUMED_LABEL_SIZE * self::LABEL_LINE_HEIGHT;
+		if ( ! empty( $this->x_ticks ) ) {
+			$padding['bottom'] = max(
+				$padding['bottom'],
+				self::EDGE_INSET + ( $has_x_title ? self::AXIS_TITLE_SPACE : 0 ) + $label_height + self::TICK_LABEL_GAP_Y
+			);
+		} elseif ( $has_x_title ) {
 			$padding['bottom'] += self::AXIS_TITLE_SPACE;
+		}
+
+		/*
+		 * The last x tick label is centred on the right edge of the plot,
+		 * so half of it hangs past. Without this the final label on a
+		 * chart running to its own maximum is cut off by the canvas.
+		 */
+		$x_label_width = $this->widest_label( $this->x_ticks );
+		if ( $x_label_width > 0 ) {
+			$padding['right'] = max( $padding['right'], self::EDGE_INSET + $x_label_width / 2 );
+			$padding['left']  = max( $padding['left'], self::EDGE_INSET + $x_label_width / 2 );
 		}
 
 		if ( isset( $overrides['padding'] ) && is_array( $overrides['padding'] ) ) {
@@ -281,10 +354,32 @@ class KDNA_Charts_Scale {
 		}
 
 		foreach ( $padding as $edge => $value ) {
-			$padding[ $edge ] = max( 0.0, (float) $value );
+			$padding[ $edge ] = round( max( 0.0, (float) $value ), self::PRECISION );
 		}
 
 		return $padding;
+	}
+
+	/**
+	 * An estimate of how wide the longest label in a tick list will be
+	 * drawn. See ASSUMED_LABEL_SIZE for why this is an estimate.
+	 */
+	private function widest_label( array $ticks ) {
+		$longest = 0;
+		foreach ( $ticks as $tick ) {
+			$label = (string) ( $tick['label'] ?? '' );
+			if ( '' === $label ) {
+				continue;
+			}
+			// Multibyte aware, because a label may carry a currency
+			// symbol or an accented category name.
+			$length  = function_exists( 'mb_strlen' ) ? mb_strlen( $label ) : strlen( $label );
+			$longest = max( $longest, $length );
+		}
+		if ( 0 === $longest ) {
+			return 0.0;
+		}
+		return $longest * self::LABEL_CHAR_WIDTH * self::ASSUMED_LABEL_SIZE;
 	}
 
 	/**
@@ -559,7 +654,7 @@ class KDNA_Charts_Scale {
 	 * @param string $axis 'x' or 'y'.
 	 * @return array List of arrays with keys value, label, emphasis, rule, position, generated.
 	 */
-	private function resolve_ticks( $axis ) {
+	private function resolve_tick_values( $axis ) {
 		$declared = $this->definition['axes'][ $axis ]['ticks'] ?? array();
 		$out      = array();
 
@@ -576,7 +671,7 @@ class KDNA_Charts_Scale {
 						: self::format_number( $value ),
 					'emphasis'  => isset( $tick['emphasis'] ) ? (string) $tick['emphasis'] : 'normal',
 					'rule'      => isset( $tick['rule'] ) ? (string) $tick['rule'] : 'none',
-					'position'  => ( 'x' === $axis ) ? $this->x( $value ) : $this->y( $value ),
+					'position'  => null,
 					'generated' => false,
 				);
 			}
@@ -587,13 +682,12 @@ class KDNA_Charts_Scale {
 		// its slot, and the label is the category name.
 		if ( 'x' === $axis && $this->is_categorical() ) {
 			foreach ( $this->categories as $index => $name ) {
-				$slot  = $this->plot['width'] / max( 1, count( $this->categories ) );
 				$out[] = array(
 					'value'     => $index + 0.5,
 					'label'     => $name,
 					'emphasis'  => 'normal',
 					'rule'      => 'none',
-					'position'  => round( $this->plot['x'] + ( $index + 0.5 ) * $slot, self::PRECISION ),
+					'position'  => null,
 					'generated' => true,
 				);
 			}
@@ -607,12 +701,24 @@ class KDNA_Charts_Scale {
 				'label'     => self::format_number( $value ),
 				'emphasis'  => 'normal',
 				'rule'      => ( 'y' === $axis ) ? 'dotted' : 'none',
-				'position'  => ( 'x' === $axis ) ? $this->x( $value ) : $this->y( $value ),
+				'position'  => null,
 				'generated' => true,
 			);
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Fills in where each tick sits, once the plot area is known.
+	 */
+	private function position_ticks() {
+		foreach ( $this->x_ticks as $index => $tick ) {
+			$this->x_ticks[ $index ]['position'] = $this->x( $tick['value'] );
+		}
+		foreach ( $this->y_ticks as $index => $tick ) {
+			$this->y_ticks[ $index ]['position'] = $this->y( $tick['value'] );
+		}
 	}
 
 	/**

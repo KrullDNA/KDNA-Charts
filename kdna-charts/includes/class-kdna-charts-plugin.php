@@ -16,8 +16,11 @@ require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-schema.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-cpt.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-data.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-scale.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer-svg.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-import.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-admin.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-editor.php';
 
 KDNA_Charts_CPT::init();
 KDNA_Charts_Scale_Debug::init();
@@ -25,6 +28,7 @@ KDNA_Charts_Scale_Debug::init();
 if ( is_admin() ) {
 	KDNA_Charts_Admin::init();
 	KDNA_Charts_Import::init();
+	KDNA_Charts_Editor::init();
 }
 
 class KDNA_Charts_Plugin {

@@ -279,3 +279,34 @@
 .kdna-import-summary__list li {
 	margin-bottom: 4px;
 }
+
+/* ---------------------------------------------------------------------
+ * Chart edit screen preview, temporary until Stage 8
+ *
+ * The chart itself is styled entirely by the front end stylesheet, so
+ * that the preview is a picture of the real thing rather than an admin
+ * approximation of it. Only the surroundings are styled here.
+ * ------------------------------------------------------------------ */
+
+.kdna-preview__stage {
+	padding: 24px;
+	background:
+		linear-gradient( 45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75% ) 0 0 / 16px 16px,
+		linear-gradient( 45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75% ) 8px 8px / 16px 16px,
+		#fff;
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: var( --kdna-admin-radius, 8px );
+}
+
+/*
+ * The chequerboard behind the stage is there to show a transparent
+ * chart background as transparent, rather than letting the admin's
+ * white read as a colour the chart is setting.
+ */
+.kdna-preview__stage .kdna-chart {
+	margin-block: 0;
+}
+
+.kdna-preview__meta {
+	margin-top: 12px;
+}
