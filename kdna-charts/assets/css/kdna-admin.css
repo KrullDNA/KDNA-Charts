@@ -1,0 +1,813 @@
+/*
+ * KDNA Charts admin styles. Stage 1 covers the Add New type cards, the
+ * library list table pills and the shortcode copy button. The Alpine
+ * data editor styles arrive at Stage 8, the style admin at Stage 9.
+ */
+
+:root {
+	--kdna-admin-bg: #fff;
+	--kdna-admin-surface: #f6f7f7;
+	--kdna-admin-border: #dcdcde;
+	--kdna-admin-border-strong: #c3c4c7;
+	--kdna-admin-text: #1d2327;
+	--kdna-admin-text-soft: #50575e;
+	--kdna-admin-accent: #2271b1;
+	--kdna-admin-accent-soft: rgba( 34, 113, 177, 0.12 );
+	--kdna-admin-radius: 8px;
+}
+
+/* ---------------------------------------------------------------------
+ * Add New, type cards
+ * ------------------------------------------------------------------ */
+
+.kdna-type-chooser {
+	max-width: 1180px;
+	margin: 40px auto;
+}
+
+/*
+ * A dialog rather than a page, because picking a type is a decision
+ * that has to be made before anything is written, and a modal says so
+ * more plainly than a form does.
+ */
+.kdna-type-chooser__modal {
+	background: var( --kdna-admin-bg, #fff );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba( 0, 0, 0, 0.08 );
+	padding: 32px;
+}
+
+.kdna-type-chooser__title {
+	margin: 0 0 8px;
+	font-size: 22px;
+	line-height: 1.3;
+}
+
+.kdna-type-chooser__intro {
+	max-width: 68ch;
+	margin: 0 0 24px;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-type-chooser__cards {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 260px, 1fr ) );
+	gap: 20px;
+}
+
+.kdna-type-chooser__card-form {
+	margin: 0;
+	display: flex;
+}
+
+.kdna-type-chooser__card {
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	gap: 12px;
+	width: 100%;
+	padding: 24px;
+	background: var( --kdna-admin-surface );
+	border: 2px solid transparent;
+	border-radius: 10px;
+	text-align: left;
+	cursor: pointer;
+	transition: border-color 150ms, background 150ms, transform 150ms;
+}
+
+.kdna-type-chooser__card:hover,
+.kdna-type-chooser__card:focus {
+	background: var( --kdna-admin-bg );
+	border-color: var( --kdna-admin-accent );
+	transform: translateY( -2px );
+	outline: none;
+}
+
+.kdna-type-chooser__card:focus-visible {
+	box-shadow: 0 0 0 2px var( --kdna-admin-accent-soft );
+}
+
+.kdna-type-chooser__card-icon .dashicons {
+	width: 32px;
+	height: 32px;
+	font-size: 32px;
+	color: var( --kdna-admin-accent );
+}
+
+.kdna-type-chooser__card-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var( --kdna-admin-text );
+}
+
+.kdna-type-chooser__card-desc {
+	font-size: 13px;
+	line-height: 1.5;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-type-chooser__card-cta {
+	justify-self: start;
+	pointer-events: none;
+}
+
+.kdna-type-chooser__cancel {
+	margin-top: 24px;
+}
+
+/* ---------------------------------------------------------------------
+ * Library list table
+ * ------------------------------------------------------------------ */
+
+.kdna-pill {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.8;
+	background: var( --kdna-admin-accent-soft );
+	color: var( --kdna-admin-accent );
+	white-space: nowrap;
+}
+
+.kdna-pill--line,
+.kdna-pill--area {
+	background: rgba( 34, 113, 177, 0.12 );
+	color: #135e96;
+}
+
+.kdna-pill--bar,
+.kdna-pill--column {
+	background: rgba( 0, 124, 84, 0.12 );
+	color: #007c54;
+}
+
+.kdna-pill--pie,
+.kdna-pill--donut {
+	background: rgba( 148, 64, 172, 0.12 );
+	color: #7b3ba0;
+}
+
+.kdna-pill--stat {
+	background: rgba( 214, 121, 27, 0.14 );
+	color: #9a5b0c;
+}
+
+.kdna-engine {
+	font-size: 13px;
+	color: var( --kdna-admin-text );
+}
+
+.kdna-engine--inherited {
+	color: var( --kdna-admin-text-soft );
+	font-style: italic;
+}
+
+.column-kdna_type,
+.column-kdna_engine,
+.column-kdna_points,
+.column-kdna_annotations {
+	width: 10%;
+}
+
+.column-kdna_shortcode {
+	width: 18%;
+}
+
+.kdna-shortcode {
+	font-size: 12px;
+	padding: 2px 6px;
+	background: var( --kdna-admin-surface );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: 4px;
+}
+
+.kdna-copy-shortcode {
+	margin-left: 6px;
+	font-size: 12px;
+}
+
+/* ---------------------------------------------------------------------
+ * Import screen
+ * ------------------------------------------------------------------ */
+
+.kdna-import__intro {
+	max-width: 78ch;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-import__panels {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 340px, 1fr ) );
+	gap: 24px;
+	margin: 24px 0;
+}
+
+.kdna-import__panel {
+	padding: 20px 24px 8px;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-import__panel h2 {
+	margin-top: 0;
+	font-size: 15px;
+}
+
+.kdna-import__textarea {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: pre;
+	overflow-wrap: normal;
+	overflow-x: auto;
+}
+
+.kdna-import__rule {
+	margin: 32px 0 24px;
+	border: 0;
+	border-top: 1px solid var( --kdna-admin-border );
+}
+
+.kdna-import__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 16px 0 24px;
+}
+
+/*
+ * The prompt has to be in the document for the copy fallback to select
+ * from, but it is never meant to be read here. Clipped rather than
+ * display none, because a hidden element cannot be selected.
+ */
+.kdna-import__hidden-source {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
+.kdna-import__reference {
+	max-width: 1000px;
+	padding: 12px 16px;
+	background: var( --kdna-admin-surface );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-import__reference summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.kdna-import__reference[open] summary {
+	margin-bottom: 12px;
+}
+
+.kdna-import__reference-text {
+	width: 100%;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	background: var( --kdna-admin-bg );
+	white-space: pre;
+	overflow-wrap: normal;
+	overflow-x: auto;
+}
+
+/* ---------------------------------------------------------------------
+ * Import summary notice
+ * ------------------------------------------------------------------ */
+
+.kdna-import-summary__list {
+	margin: 8px 0 8px 20px;
+	list-style: disc;
+}
+
+.kdna-import-summary__list li {
+	margin-bottom: 4px;
+}
+
+/* ---------------------------------------------------------------------
+ * The chart editor
+ *
+ * Two columns on a wide screen, one on a narrow one, with the preview
+ * sticky beside the tabs. The point of the preview is watching the
+ * chart change as you edit, and a preview you have to scroll to is a
+ * preview you stop looking at.
+ * ------------------------------------------------------------------ */
+
+/*
+ * Alpine hides these until it has booted. Without it the raw templates
+ * flash on screen before the component takes over, which on a slow
+ * connection looks like the editor breaking.
+ */
+[x-cloak] {
+	display: none !important;
+}
+
+.kdna-editor {
+	margin: -6px -12px -12px;
+}
+
+/*
+ * Shown only when Alpine has not run.
+ *
+ * The template gives it x-show="false", so it is visible until Alpine
+ * boots and hides it. The cloak goes on the layout rather than the
+ * wrapper for the same reason: cloaking the wrapper would hide this
+ * warning along with everything else, exactly when it is the one thing
+ * that needs to be on screen.
+ */
+.kdna-editor__boot {
+	margin: 0 0 16px;
+	padding: 10px 14px;
+}
+
+.kdna-editor__layout {
+	display: grid;
+	grid-template-columns: minmax( 0, 1fr ) minmax( 300px, 30% );
+	gap: 24px;
+	align-items: start;
+}
+
+@media ( max-width: 1200px ) {
+	.kdna-editor__layout {
+		grid-template-columns: minmax( 0, 1fr );
+	}
+}
+
+.kdna-editor__main {
+	min-width: 0;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+
+.kdna-editor__tabs {
+	display: flex;
+	gap: 2px;
+	margin-bottom: 16px;
+	border-bottom: 1px solid var( --kdna-admin-border, #dcdcde );
+}
+
+.kdna-editor__tab {
+	position: relative;
+	bottom: -1px;
+	padding: 10px 18px;
+	background: transparent;
+	border: 1px solid transparent;
+	border-bottom: 0;
+	border-radius: 6px 6px 0 0;
+	font-size: 14px;
+	font-weight: 500;
+	color: var( --kdna-admin-text-soft, #50575e );
+	cursor: pointer;
+}
+
+.kdna-editor__tab:hover {
+	color: var( --kdna-admin-text, #1d2327 );
+}
+
+.kdna-editor__tab.is-active {
+	background: var( --kdna-admin-bg, #fff );
+	border-color: var( --kdna-admin-border, #dcdcde );
+	color: var( --kdna-admin-text, #1d2327 );
+	font-weight: 600;
+}
+
+.kdna-editor__tab-count {
+	display: inline-block;
+	min-width: 18px;
+	margin-left: 6px;
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: var( --kdna-admin-accent-soft, rgba( 34, 113, 177, 0.12 ) );
+	color: var( --kdna-admin-accent, #2271b1 );
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.kdna-editor__panel {
+	min-width: 0;
+}
+
+.kdna-editor__section {
+	min-width: 0;
+}
+
+.kdna-editor__section h3 {
+	margin: 24px 0 6px;
+	font-size: 14px;
+}
+
+.kdna-editor__section > h3:first-child {
+	margin-top: 0;
+}
+
+/* ── Fields ───────────────────────────────────────────────────── */
+
+.kdna-editor__field {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.kdna-editor__field > span {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var( --kdna-admin-text-soft, #50575e );
+}
+
+.kdna-editor__field input[type="text"],
+.kdna-editor__field input[type="number"],
+.kdna-editor__field select {
+	width: 100%;
+	min-width: 0;
+}
+
+.kdna-editor__field--narrow {
+	flex: 0 0 96px;
+	max-width: 96px;
+}
+
+.kdna-editor__field--wide {
+	flex: 3 1 240px;
+}
+
+.kdna-editor__field--inline {
+	flex: 0 0 130px;
+}
+
+.kdna-editor__field--check {
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-editor__field--check > span {
+	text-transform: none;
+	letter-spacing: 0;
+	font-weight: 400;
+	font-size: 13px;
+}
+
+.kdna-editor__field-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+	min-width: 0;
+}
+
+.kdna-editor__field-row--wide {
+	margin-top: 24px;
+}
+
+/* ── Grids ────────────────────────────────────────────────────── */
+
+.kdna-editor__grid {
+	width: 100%;
+	border-collapse: collapse;
+	background: var( --kdna-admin-bg, #fff );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+}
+
+.kdna-editor__grid th {
+	padding: 6px 8px;
+	background: var( --kdna-admin-surface, #f6f7f7 );
+	border-bottom: 1px solid var( --kdna-admin-border, #dcdcde );
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var( --kdna-admin-text-soft, #50575e );
+	text-align: left;
+}
+
+.kdna-editor__grid td {
+	padding: 3px 6px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.kdna-editor__grid tr:last-child td {
+	border-bottom: 0;
+}
+
+/*
+ * The cells carry no border of their own, so the grid reads as a
+ * spreadsheet rather than as a stack of form fields. The focus ring is
+ * what says which cell you are in.
+ */
+.kdna-editor__grid input[type="text"] {
+	width: 100%;
+	min-width: 60px;
+	padding: 3px 6px;
+	border: 1px solid transparent;
+	background: transparent;
+	box-shadow: none;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-editor__grid input[type="text"]:hover {
+	border-color: var( --kdna-admin-border, #dcdcde );
+}
+
+.kdna-editor__grid input[type="text"]:focus {
+	border-color: var( --kdna-admin-accent, #2271b1 );
+	background: var( --kdna-admin-bg, #fff );
+	box-shadow: 0 0 0 1px var( --kdna-admin-accent, #2271b1 );
+}
+
+/*
+ * Number columns are sized to their content rather than sharing the
+ * table's width evenly. Two numeric columns stretched across a wide
+ * panel read as two lonely fields, not as a grid.
+ */
+.kdna-editor__grid--points th,
+.kdna-editor__grid--points td {
+	width: 110px;
+}
+
+.kdna-editor__grid--points th:last-child,
+.kdna-editor__grid--points td:last-child {
+	width: auto;
+}
+
+.kdna-editor__grid-index {
+	width: 32px;
+	color: var( --kdna-admin-text-soft, #50575e );
+	font-size: 11px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-editor__grid-actions {
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+}
+
+.kdna-editor__grid-actions .button-link {
+	margin-left: 8px;
+	font-size: 12px;
+}
+
+.kdna-editor__grid-foot {
+	margin: 8px 0 0;
+	display: flex;
+	gap: 8px;
+}
+
+.kdna-editor__grid--wide {
+	display: block;
+	overflow-x: auto;
+}
+
+.kdna-editor__series-name {
+	width: 100%;
+	min-width: 90px;
+}
+
+/* ── Series and segments ──────────────────────────────────────── */
+
+.kdna-editor__series {
+	margin-bottom: 20px;
+	padding: 16px;
+	background: var( --kdna-admin-surface, #f6f7f7 );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: var( --kdna-admin-radius, 8px );
+}
+
+.kdna-editor__series-head {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
+.kdna-editor__segment {
+	margin-bottom: 14px;
+	padding: 12px;
+	background: var( --kdna-admin-bg, #fff );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+}
+
+.kdna-editor__segment-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 14px;
+	margin-bottom: 10px;
+}
+
+.kdna-editor__remove {
+	color: var( --kdna-admin-danger, #b32d2e );
+}
+
+/* ── Annotation cards ─────────────────────────────────────────── */
+
+.kdna-editor__cards {
+	margin-bottom: 28px;
+}
+
+.kdna-editor__cards-head {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: start;
+	gap: 8px 16px;
+	margin-bottom: 10px;
+}
+
+.kdna-editor__cards-head h3 {
+	margin: 0;
+	grid-column: 1;
+}
+
+.kdna-editor__cards-head .description {
+	grid-column: 1;
+	margin: 0;
+}
+
+.kdna-editor__cards-head button {
+	grid-column: 2;
+	grid-row: 1 / span 2;
+	align-self: center;
+}
+
+.kdna-editor__card {
+	margin-bottom: 8px;
+	padding: 12px 14px;
+	background: var( --kdna-admin-bg, #fff );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+}
+
+.kdna-editor__anchor {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px dashed var( --kdna-admin-border, #dcdcde );
+}
+
+.kdna-editor__anchor-label {
+	align-self: center;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var( --kdna-admin-text-soft, #50575e );
+}
+
+/* ── Options ──────────────────────────────────────────────────── */
+
+.kdna-editor__options {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 220px, 1fr ) );
+	gap: 16px;
+	margin-top: 12px;
+}
+
+.kdna-editor__option-help {
+	margin: 5px 0 0;
+	font-size: 12px;
+	line-height: 1.4;
+	color: var( --kdna-admin-text-soft, #50575e );
+}
+
+.kdna-editor__raw {
+	max-height: 200px;
+	overflow: auto;
+	padding: 10px;
+	background: var( --kdna-admin-surface, #f6f7f7 );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+	font-size: 12px;
+}
+
+/* ── Preview ──────────────────────────────────────────────────── */
+
+.kdna-editor__preview {
+	position: sticky;
+	top: 46px;
+	padding: 16px;
+	background: var( --kdna-admin-bg, #fff );
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: var( --kdna-admin-radius, 8px );
+}
+
+.kdna-editor__preview-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.kdna-editor__preview-head h3 {
+	margin: 0;
+	flex: 1 1 auto;
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var( --kdna-admin-text-soft, #50575e );
+}
+
+.kdna-editor__spinner {
+	width: 14px;
+	height: 14px;
+	border: 2px solid var( --kdna-admin-border-strong, #c3c4c7 );
+	border-top-color: var( --kdna-admin-accent, #2271b1 );
+	border-radius: 50%;
+	animation: kdna-spin 700ms linear infinite;
+}
+
+@keyframes kdna-spin {
+	to { transform: rotate( 360deg ); }
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.kdna-editor__spinner {
+		animation: none;
+	}
+}
+
+/*
+ * A chequerboard, so a chart with a transparent background reads as
+ * transparent rather than borrowing the admin's white and looking like
+ * a colour it is setting.
+ */
+.kdna-editor__preview-stage {
+	padding: 16px;
+	background:
+		linear-gradient( 45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75% ) 0 0 / 16px 16px,
+		linear-gradient( 45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75% ) 8px 8px / 16px 16px,
+		#fff;
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+	min-height: 160px;
+}
+
+.kdna-editor__preview-stage .kdna-chart {
+	margin-block: 0;
+}
+
+.kdna-editor__preview-error {
+	margin: 0 0 12px;
+	padding: 8px 12px;
+}
+
+.kdna-editor__paste-notice {
+	margin: 0 0 12px;
+	padding: 6px 12px;
+	background: var( --kdna-admin-accent-soft, rgba( 34, 113, 177, 0.12 ) );
+	border-radius: 4px;
+	color: var( --kdna-admin-accent, #2271b1 );
+	font-size: 13px;
+}
+
+/* ── Axes ─────────────────────────────────────────────────────── */
+
+.kdna-editor__axis-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 280px, 1fr ) );
+	gap: 16px;
+	margin-top: 12px;
+}
+
+.kdna-editor__axis {
+	padding: 12px 14px;
+	border: 1px solid var( --kdna-admin-border, #dcdcde );
+	border-radius: 6px;
+}
+
+.kdna-editor__axis legend {
+	padding: 0 6px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var( --kdna-admin-text-soft, #50575e );
+}
+
+.kdna-editor__axis .kdna-editor__field {
+	margin-bottom: 10px;
+}
+
+/* ── Type chooser ─────────────────────────────────────────────── */
+
+.kdna-type-chooser__alternative {
+	margin-top: 20px;
+	color: var( --kdna-admin-text-soft, #50575e );
+}

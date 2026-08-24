@@ -1,0 +1,983 @@
+/*
+ * KDNA Charts front end stylesheet.
+ *
+ * This file is where a chart's appearance lives. Every colour, stroke
+ * width and font size in the plugin is declared here as
+ * var( --property, fallback ), and nothing is written into the markup.
+ *
+ * That arrangement is the point rather than a convention. Because the
+ * renderer emits geometry and classes only, the style cascade can
+ * change how every chart on a site looks by setting custom properties
+ * on a wrapper, with nothing re-rendering and no chart data touched.
+ * A chart that says nothing about its own colours inherits the site
+ * palette automatically, because an unset property falls through to
+ * the fallback written here.
+ *
+ * The cascade, from Stage 9 onward:
+ *
+ *   this stylesheet's fallbacks
+ *     -> global styling page
+ *       -> per chart overrides
+ *         -> Elementor widget controls
+ *
+ * ── A note on units ────────────────────────────────────────────────
+ *
+ * Sizes inside the SVG are in user units on a 1000 unit wide canvas,
+ * not screen pixels. A px value in a rule that targets an SVG element
+ * is read as a user unit and then scaled by the viewBox, so 18px is
+ * about 12px on screen in a 700px wide column and about 6px on a phone.
+ * That is why the label sizes are redeclared at the breakpoints near
+ * the bottom of this file: shrinking the chart has to make the type
+ * proportionally larger, or the labels disappear.
+ *
+ * @package KDNA_Charts
+ */
+
+/* ---------------------------------------------------------------------
+ * Tokens
+ *
+ * Declared on the block rather than :root, so a chart inside a
+ * container that sets its own values still wins, and so two charts on
+ * one page can differ.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart {
+	/* Frame */
+	--kdna-chart-background: transparent;
+	--kdna-chart-max-width: 100%;
+	--kdna-chart-margin-block: 2rem;
+	--kdna-chart-padding: 0;
+	--kdna-chart-radius: 0;
+	--kdna-chart-border-width: 0;
+	--kdna-chart-border-colour: transparent;
+
+	/* Typography, shared */
+	--kdna-chart-font-family: inherit;
+
+	/* Series, by emphasis */
+	--kdna-chart-series-strong: #14332c;
+	--kdna-chart-series-normal: #4a5f58;
+	--kdna-chart-series-muted: #9aa8a3;
+
+	--kdna-chart-line-width-strong: 3.5px;
+	--kdna-chart-line-width-normal: 2.5px;
+	--kdna-chart-line-width-muted: 2px;
+
+	--kdna-chart-dash-dashed: 14px 10px;
+	--kdna-chart-dash-dotted: 0.1px 9px;
+
+	/* Area fills */
+	--kdna-chart-area-colour-strong: #14332c;
+	--kdna-chart-area-colour-normal: #4a5f58;
+	--kdna-chart-area-colour-muted: #9aa8a3;
+
+	--kdna-chart-area-opacity-top-strong: 0.16;
+	--kdna-chart-area-opacity-bottom-strong: 0;
+	--kdna-chart-area-opacity-top-normal: 0.12;
+	--kdna-chart-area-opacity-bottom-normal: 0;
+	--kdna-chart-area-opacity-top-muted: 0.07;
+	--kdna-chart-area-opacity-bottom-muted: 0;
+
+	/* Gridlines */
+	--kdna-chart-gridline-colour: #d5ddd9;
+	--kdna-chart-gridline-colour-strong: #9aa8a3;
+	--kdna-chart-gridline-colour-muted: #e4e9e7;
+	--kdna-chart-gridline-width: 1.5px;
+	--kdna-chart-gridline-width-strong: 2px;
+	--kdna-chart-gridline-dash-dashed: 10px 8px;
+	--kdna-chart-gridline-dash-dotted: 2px 8px;
+
+	/* Axis tick labels */
+	--kdna-chart-axis-label-size: 18px;
+	--kdna-chart-axis-label-weight: 400;
+	--kdna-chart-axis-label-weight-strong: 600;
+	--kdna-chart-axis-label-colour: #4a5f58;
+	--kdna-chart-axis-label-colour-strong: #14332c;
+	--kdna-chart-axis-label-colour-muted: #a8b3af;
+	--kdna-chart-axis-label-letter-spacing: 0;
+
+	/* Axis titles */
+	--kdna-chart-axis-title-size: 18px;
+	--kdna-chart-axis-title-weight: 600;
+	--kdna-chart-axis-title-colour: #6b7a75;
+	--kdna-chart-axis-title-letter-spacing: 0.06em;
+	--kdna-chart-axis-title-transform: uppercase;
+
+	/* Caption */
+	--kdna-chart-caption-size: 1rem;
+	--kdna-chart-caption-weight: 400;
+	--kdna-chart-caption-colour: #4a5f58;
+	--kdna-chart-caption-align: left;
+	--kdna-chart-caption-margin: 0.75rem 0 0;
+	--kdna-chart-caption-line-height: 1.5;
+
+	/* Source line */
+	--kdna-chart-source-size: 0.8125rem;
+	--kdna-chart-source-weight: 400;
+	--kdna-chart-source-colour: #8a968f;
+	--kdna-chart-source-align: left;
+	--kdna-chart-source-margin: 0.5rem 0 0;
+
+	/*
+	 * Series tones, for charts with more than one series.
+	 *
+	 * A ramp rather than a set of hues, because an editorial chart is
+	 * usually making one argument in one colour and the series are
+	 * degrees of the same thing. A site that needs distinct hues sets
+	 * these six and gets them.
+	 */
+	--kdna-chart-series-colour-1: #14332c;
+	--kdna-chart-series-colour-2: #3d5f55;
+	--kdna-chart-series-colour-3: #6b8b80;
+	--kdna-chart-series-colour-4: #9db3ab;
+	--kdna-chart-series-colour-5: #c3d2cc;
+	--kdna-chart-series-colour-6: #e2e9e6;
+
+	/* Bars and columns */
+	--kdna-chart-bar-colour-strong: #14332c;
+	--kdna-chart-bar-colour-normal: #4a5f58;
+	--kdna-chart-bar-colour-muted: #b6c2bd;
+	--kdna-chart-bar-opacity: 1;
+	--kdna-chart-bar-stroke-colour: transparent;
+	--kdna-chart-bar-stroke-width: 0;
+
+	/* Value labels printed on or beside a bar */
+	--kdna-chart-value-label-size: 20px;
+	--kdna-chart-value-label-weight: 600;
+	--kdna-chart-value-label-colour: #14332c;
+	--kdna-chart-value-label-colour-inside: #fff;
+
+	/* Pie and donut */
+	--kdna-chart-segment-stroke-colour: transparent;
+	--kdna-chart-segment-stroke-width: 0;
+	--kdna-chart-segment-label-size: 20px;
+	--kdna-chart-segment-label-weight: 600;
+	--kdna-chart-segment-label-colour: #14332c;
+	--kdna-chart-segment-label-colour-inside: #fff;
+	--kdna-chart-segment-centre-size: 64px;
+	--kdna-chart-segment-centre-weight: 700;
+	--kdna-chart-segment-centre-colour: #14332c;
+	--kdna-chart-segment-leader-colour: #9aa8a3;
+	--kdna-chart-segment-leader-width: 1.5px;
+
+	/* Legend */
+	--kdna-chart-legend-label-size: 20px;
+	--kdna-chart-legend-label-weight: 400;
+	--kdna-chart-legend-label-colour: #4a5f58;
+
+	/* Stat blocks */
+	--kdna-chart-stat-gap: 2rem;
+	--kdna-chart-stat-number-size: clamp( 2.4rem, 6vw, 3.6rem );
+	--kdna-chart-stat-number-weight: 700;
+	--kdna-chart-stat-number-colour: #14332c;
+	--kdna-chart-stat-number-leading: 1;
+	--kdna-chart-stat-number-tracking: -0.03em;
+	--kdna-chart-stat-suffix-size: 0.5em;
+	--kdna-chart-stat-suffix-weight: 600;
+	--kdna-chart-stat-suffix-colour: #6b7a75;
+	--kdna-chart-stat-label-size: 0.9375rem;
+	--kdna-chart-stat-label-weight: 500;
+	--kdna-chart-stat-label-colour: #6b7a75;
+	--kdna-chart-stat-label-tracking: 0.02em;
+	--kdna-chart-stat-rule-width: 0;
+	--kdna-chart-stat-rule-colour: #d5ddd9;
+	--kdna-chart-stat-padding: 0;
+
+	/* Markers */
+	--kdna-chart-marker-colour: #6b7a75;
+	--kdna-chart-marker-width: 2px;
+	--kdna-chart-marker-dash-dashed: 10px 8px;
+	--kdna-chart-marker-dash-dotted: 2px 8px;
+	--kdna-chart-marker-label-size: 20px;
+	--kdna-chart-marker-label-weight: 600;
+	--kdna-chart-marker-label-colour: #14332c;
+	--kdna-chart-marker-label-letter-spacing: 0.04em;
+	--kdna-chart-marker-label-transform: none;
+
+	/* Emphasised data points */
+	--kdna-chart-point-radius: 9px;
+	--kdna-chart-point-colour: #14332c;
+	--kdna-chart-point-fill-hollow: #fff;
+	--kdna-chart-point-stroke-width: 3.5px;
+	--kdna-chart-point-label-size: 20px;
+	--kdna-chart-point-label-weight: 500;
+	--kdna-chart-point-label-colour: #4a5f58;
+
+	/* Callouts */
+	--kdna-chart-callout-value-size-large: 56px;
+	--kdna-chart-callout-value-size-small: 34px;
+	--kdna-chart-callout-value-weight: 700;
+	--kdna-chart-callout-value-colour: #14332c;
+	--kdna-chart-callout-value-letter-spacing: -0.02em;
+	--kdna-chart-callout-caption-size: 20px;
+	--kdna-chart-callout-caption-weight: 400;
+	--kdna-chart-callout-caption-colour: #6b7a75;
+
+	/* Leader lines and span brackets */
+	--kdna-chart-leader-colour: #9aa8a3;
+	--kdna-chart-leader-width: 1.75px;
+	--kdna-chart-leader-dash: none;
+	--kdna-chart-bracket-colour: #9aa8a3;
+	--kdna-chart-bracket-width: 1.75px;
+
+	/* Notes */
+	--kdna-chart-note-size: 20px;
+	--kdna-chart-note-weight: 400;
+	--kdna-chart-note-colour: #8a968f;
+	--kdna-chart-note-style: italic;
+
+	/* Placeholder, editors only */
+	--kdna-chart-placeholder-background: #f6f7f7;
+	--kdna-chart-placeholder-border: #dcdcde;
+	--kdna-chart-placeholder-colour: #50575e;
+}
+
+/* ---------------------------------------------------------------------
+ * Frame
+ * ------------------------------------------------------------------ */
+
+.kdna-chart {
+	display: block;
+	max-width: var( --kdna-chart-max-width, 100% );
+	margin-block: var( --kdna-chart-margin-block, 2rem );
+	margin-inline: 0;
+	padding: var( --kdna-chart-padding, 0 );
+	background: var( --kdna-chart-background, transparent );
+	border: var( --kdna-chart-border-width, 0 ) solid var( --kdna-chart-border-colour, transparent );
+	border-radius: var( --kdna-chart-radius, 0 );
+	font-family: var( --kdna-chart-font-family, inherit );
+}
+
+.kdna-chart__frame {
+	position: relative;
+	width: 100%;
+}
+
+/*
+ * A size container, so the label sizing near the bottom of this file can
+ * respond to how wide the chart actually is rather than how wide the
+ * window is. A chart in a narrow sidebar of a wide page needs the same
+ * treatment as a chart on a phone, and only the container knows that.
+ */
+.kdna-chart {
+	container-type: inline-size;
+	container-name: kdna-chart;
+}
+
+/*
+ * The svg carries width 100% as an attribute so it is correct before
+ * any stylesheet loads. height auto is what lets the viewBox decide the
+ * proportion, and display block removes the inline descender gap that
+ * would otherwise show as a few stray pixels beneath every chart.
+ */
+.kdna-chart__svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	overflow: visible;
+}
+
+/* ---------------------------------------------------------------------
+ * Series lines
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__line {
+	fill: none;
+	stroke: var( --kdna-chart-series-normal, #4a5f58 );
+	stroke-width: var( --kdna-chart-line-width-normal, 2.5px );
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.kdna-chart__line--strong {
+	stroke: var( --kdna-chart-series-strong, #14332c );
+	stroke-width: var( --kdna-chart-line-width-strong, 3.5px );
+}
+
+.kdna-chart__line--muted {
+	stroke: var( --kdna-chart-series-muted, #9aa8a3 );
+	stroke-width: var( --kdna-chart-line-width-muted, 2px );
+}
+
+/*
+ * Solid is the default, so this rule looks redundant. It is not: without
+ * it, a dash pattern set globally on .kdna-chart__line would leak onto
+ * the segments that asked to be solid, and a projection would be
+ * indistinguishable from a measurement.
+ */
+.kdna-chart__line--solid {
+	stroke-dasharray: none;
+}
+
+.kdna-chart__line--dashed {
+	stroke-dasharray: var( --kdna-chart-dash-dashed, 14px 10px );
+	stroke-linecap: butt;
+}
+
+/*
+ * A dash of almost nothing with a round cap is a dot. Using a zero
+ * length dash would render nothing at all in some engines, hence the
+ * tenth of a unit.
+ */
+.kdna-chart__line--dotted {
+	stroke-dasharray: var( --kdna-chart-dash-dotted, 0.1px 9px );
+	stroke-linecap: round;
+}
+
+/* ---------------------------------------------------------------------
+ * Area fills
+ *
+ * The path references a gradient by id, and the gradient's stops read
+ * their colour and opacity from here. stop-color and stop-opacity are
+ * real CSS properties, so no colour needs to reach the markup.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__area {
+	stroke: none;
+}
+
+.kdna-chart__area-stop--strong {
+	stop-color: var( --kdna-chart-area-colour-strong, #14332c );
+}
+
+.kdna-chart__area-stop--normal {
+	stop-color: var( --kdna-chart-area-colour-normal, #4a5f58 );
+}
+
+.kdna-chart__area-stop--muted {
+	stop-color: var( --kdna-chart-area-colour-muted, #9aa8a3 );
+}
+
+.kdna-chart__area-stop--top.kdna-chart__area-stop--strong {
+	stop-opacity: var( --kdna-chart-area-opacity-top-strong, 0.16 );
+}
+
+.kdna-chart__area-stop--bottom.kdna-chart__area-stop--strong {
+	stop-opacity: var( --kdna-chart-area-opacity-bottom-strong, 0 );
+}
+
+.kdna-chart__area-stop--top.kdna-chart__area-stop--normal {
+	stop-opacity: var( --kdna-chart-area-opacity-top-normal, 0.12 );
+}
+
+.kdna-chart__area-stop--bottom.kdna-chart__area-stop--normal {
+	stop-opacity: var( --kdna-chart-area-opacity-bottom-normal, 0 );
+}
+
+.kdna-chart__area-stop--top.kdna-chart__area-stop--muted {
+	stop-opacity: var( --kdna-chart-area-opacity-top-muted, 0.07 );
+}
+
+.kdna-chart__area-stop--bottom.kdna-chart__area-stop--muted {
+	stop-opacity: var( --kdna-chart-area-opacity-bottom-muted, 0 );
+}
+
+/* ---------------------------------------------------------------------
+ * Gridlines
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__gridline {
+	fill: none;
+	stroke: var( --kdna-chart-gridline-colour, #d5ddd9 );
+	stroke-width: var( --kdna-chart-gridline-width, 1.5px );
+}
+
+.kdna-chart__gridline--strong {
+	stroke: var( --kdna-chart-gridline-colour-strong, #9aa8a3 );
+	stroke-width: var( --kdna-chart-gridline-width-strong, 2px );
+}
+
+.kdna-chart__gridline--muted {
+	stroke: var( --kdna-chart-gridline-colour-muted, #e4e9e7 );
+}
+
+.kdna-chart__gridline--solid {
+	stroke-dasharray: none;
+}
+
+.kdna-chart__gridline--dashed {
+	stroke-dasharray: var( --kdna-chart-gridline-dash-dashed, 10px 8px );
+}
+
+.kdna-chart__gridline--dotted {
+	stroke-dasharray: var( --kdna-chart-gridline-dash-dotted, 2px 8px );
+	stroke-linecap: round;
+}
+
+/* ---------------------------------------------------------------------
+ * Axis labels and titles
+ *
+ * SVG text takes its colour from fill, not from color.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__axis-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-axis-label-size, 18px );
+	font-weight: var( --kdna-chart-axis-label-weight, 400 );
+	letter-spacing: var( --kdna-chart-axis-label-letter-spacing, 0 );
+	fill: var( --kdna-chart-axis-label-colour, #4a5f58 );
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-chart__axis-label--strong {
+	font-weight: var( --kdna-chart-axis-label-weight-strong, 600 );
+	fill: var( --kdna-chart-axis-label-colour-strong, #14332c );
+}
+
+.kdna-chart__axis-label--muted {
+	fill: var( --kdna-chart-axis-label-colour-muted, #a8b3af );
+}
+
+.kdna-chart__axis-title {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-axis-title-size, 18px );
+	font-weight: var( --kdna-chart-axis-title-weight, 600 );
+	letter-spacing: var( --kdna-chart-axis-title-letter-spacing, 0.06em );
+	text-transform: var( --kdna-chart-axis-title-transform, uppercase );
+	fill: var( --kdna-chart-axis-title-colour, #6b7a75 );
+}
+
+/* ---------------------------------------------------------------------
+ * Bars and columns
+ *
+ * One set of rules for both, because the renderer draws both from one
+ * body of code and only the scale knows which way round the chart is.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__bar {
+	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
+	fill-opacity: var( --kdna-chart-bar-opacity, 1 );
+	stroke: var( --kdna-chart-bar-stroke-colour, transparent );
+	stroke-width: var( --kdna-chart-bar-stroke-width, 0 );
+}
+
+/*
+ * The series tones come first and the emphasis modifiers after them, so
+ * a definition that states an emphasis overrides the tone it would
+ * otherwise have taken. The renderer only emits an emphasis modifier
+ * when the definition asked for one, which is what makes that ordering
+ * mean anything.
+ */
+.kdna-chart__bar--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
+.kdna-chart__bar--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
+.kdna-chart__bar--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
+.kdna-chart__bar--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
+.kdna-chart__bar--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
+.kdna-chart__bar--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+
+.kdna-chart__bar--strong {
+	fill: var( --kdna-chart-bar-colour-strong, #14332c );
+}
+
+.kdna-chart__bar--normal {
+	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
+}
+
+.kdna-chart__bar--muted {
+	fill: var( --kdna-chart-bar-colour-muted, #b6c2bd );
+}
+
+
+
+.kdna-chart__value-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-value-label-size, 20px );
+	font-weight: var( --kdna-chart-value-label-weight, 600 );
+	fill: var( --kdna-chart-value-label-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A figure printed on the bar itself has to read against the bar, not
+ * against the page, so it takes its own colour. The renderer only ever
+ * uses this class when the bar was long enough to hold the figure.
+ */
+.kdna-chart__value-label--inside {
+	fill: var( --kdna-chart-value-label-colour-inside, #fff );
+}
+
+/*
+ * Except on the pale half of the series ramp, where a reversed figure
+ * would disappear. The renderer marks those, since only it knows which
+ * tone a given bar took.
+ */
+.kdna-chart__value-label--pale {
+	fill: var( --kdna-chart-value-label-colour, #14332c );
+}
+
+/* ---------------------------------------------------------------------
+ * Pie and donut
+ *
+ * The segments take the same series ramp the bars do, so a pie and a
+ * stacked column of the same data read as the same chart.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__segment {
+	fill: var( --kdna-chart-series-colour-1, #14332c );
+	stroke: var( --kdna-chart-segment-stroke-colour, transparent );
+	stroke-width: var( --kdna-chart-segment-stroke-width, 0 );
+}
+
+.kdna-chart__segment--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
+.kdna-chart__segment--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
+.kdna-chart__segment--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
+.kdna-chart__segment--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
+.kdna-chart__segment--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
+.kdna-chart__segment--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+
+.kdna-chart__segment--strong { fill: var( --kdna-chart-series-strong, #14332c ); }
+.kdna-chart__segment--normal { fill: var( --kdna-chart-series-normal, #4a5f58 ); }
+.kdna-chart__segment--muted { fill: var( --kdna-chart-series-muted, #9aa8a3 ); }
+
+.kdna-chart__segment-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-segment-label-size, 20px );
+	font-weight: var( --kdna-chart-segment-label-weight, 600 );
+	fill: var( --kdna-chart-segment-label-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A figure printed on a segment is reversed out, and darkened again on
+ * the pale half of the ramp where a reversed figure would disappear.
+ * The renderer says which tone a segment took, since only it knows.
+ */
+.kdna-chart__segment-label--inside {
+	fill: var( --kdna-chart-segment-label-colour-inside, #fff );
+}
+
+.kdna-chart__segment-label--inside.kdna-chart__segment-label--series-4,
+.kdna-chart__segment-label--inside.kdna-chart__segment-label--series-5,
+.kdna-chart__segment-label--inside.kdna-chart__segment-label--series-6 {
+	fill: var( --kdna-chart-segment-label-colour, #14332c );
+}
+
+/*
+ * A figure in the middle of a donut sits on the page rather than on a
+ * segment, so it keeps the page colour and can afford to be larger.
+ */
+.kdna-chart__segment-label--centre {
+	font-size: var( --kdna-chart-segment-centre-size, 64px );
+	font-weight: var( --kdna-chart-segment-centre-weight, 700 );
+	fill: var( --kdna-chart-segment-centre-colour, #14332c );
+	letter-spacing: -0.02em;
+}
+
+.kdna-chart__segment-leader {
+	fill: none;
+	stroke: var( --kdna-chart-segment-leader-colour, #9aa8a3 );
+	stroke-width: var( --kdna-chart-segment-leader-width, 1.5px );
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------------
+ * Legend
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__legend-swatch {
+	fill: var( --kdna-chart-series-colour-1, #14332c );
+}
+
+.kdna-chart__legend-swatch--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
+.kdna-chart__legend-swatch--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
+.kdna-chart__legend-swatch--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
+.kdna-chart__legend-swatch--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
+.kdna-chart__legend-swatch--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
+.kdna-chart__legend-swatch--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+
+.kdna-chart__legend-swatch--strong { fill: var( --kdna-chart-series-strong, #14332c ); }
+.kdna-chart__legend-swatch--normal { fill: var( --kdna-chart-series-normal, #4a5f58 ); }
+.kdna-chart__legend-swatch--muted { fill: var( --kdna-chart-series-muted, #9aa8a3 ); }
+
+.kdna-chart__legend-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-legend-label-size, 20px );
+	font-weight: var( --kdna-chart-legend-label-weight, 400 );
+	fill: var( --kdna-chart-legend-label-colour, #4a5f58 );
+}
+
+/* ---------------------------------------------------------------------
+ * Stat blocks
+ *
+ * Real HTML in a real grid, not text inside a viewBox. A stat block is
+ * set rather than drawn: it has to wrap on a narrow screen, reflow with
+ * the reader's type size, and be selectable and translatable like the
+ * article around it. None of that survives being put in an SVG.
+ *
+ * The sizes here are in rem and em rather than canvas units for the
+ * same reason. This is the one part of the plugin that is typography
+ * first, so it is measured the way type is measured.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__stats {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 8rem, 1fr ) );
+	gap: var( --kdna-chart-stat-gap, 2rem );
+	margin: 0;
+}
+
+.kdna-chart__stats--columns-1 { grid-template-columns: minmax( 0, 1fr ); }
+.kdna-chart__stats--columns-2 { grid-template-columns: repeat( auto-fit, minmax( 12rem, 1fr ) ); }
+.kdna-chart__stats--columns-3 { grid-template-columns: repeat( auto-fit, minmax( 9rem, 1fr ) ); }
+.kdna-chart__stats--columns-4 { grid-template-columns: repeat( auto-fit, minmax( 7.5rem, 1fr ) ); }
+.kdna-chart__stats--columns-5 { grid-template-columns: repeat( auto-fit, minmax( 6.5rem, 1fr ) ); }
+.kdna-chart__stats--columns-6 { grid-template-columns: repeat( auto-fit, minmax( 5.5rem, 1fr ) ); }
+
+/*
+ * Column reverse, so the figure sits above its label while the markup
+ * keeps a description list's required order. A screen reader hears the
+ * label and then the figure, which is the way round that makes sense.
+ */
+.kdna-chart__stat {
+	display: flex;
+	flex-direction: column-reverse;
+	gap: 0.35rem;
+	padding: var( --kdna-chart-stat-padding, 0 );
+	border-left: var( --kdna-chart-stat-rule-width, 0 ) solid var( --kdna-chart-stat-rule-colour, #d5ddd9 );
+}
+
+.kdna-chart__stats--align-centre .kdna-chart__stat { text-align: center; }
+.kdna-chart__stats--align-right .kdna-chart__stat { text-align: right; }
+
+.kdna-chart__stat-value {
+	margin: 0;
+	font-size: var( --kdna-chart-stat-number-size, clamp( 2.4rem, 6vw, 3.6rem ) );
+	font-weight: var( --kdna-chart-stat-number-weight, 700 );
+	line-height: var( --kdna-chart-stat-number-leading, 1 );
+	letter-spacing: var( --kdna-chart-stat-number-tracking, -0.03em );
+	color: var( --kdna-chart-stat-number-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The suffix is sized in em, so it stays in proportion to the figure it
+ * belongs to however large that figure is set.
+ */
+.kdna-chart__stat-suffix {
+	font-size: var( --kdna-chart-stat-suffix-size, 0.5em );
+	font-weight: var( --kdna-chart-stat-suffix-weight, 600 );
+	color: var( --kdna-chart-stat-suffix-colour, #6b7a75 );
+	letter-spacing: 0;
+}
+
+.kdna-chart__stat-label {
+	font-size: var( --kdna-chart-stat-label-size, 0.9375rem );
+	font-weight: var( --kdna-chart-stat-label-weight, 500 );
+	letter-spacing: var( --kdna-chart-stat-label-tracking, 0.02em );
+	line-height: 1.35;
+	color: var( --kdna-chart-stat-label-colour, #6b7a75 );
+}
+
+.kdna-chart__stat--strong .kdna-chart__stat-value { color: var( --kdna-chart-series-strong, #14332c ); }
+.kdna-chart__stat--muted .kdna-chart__stat-value { color: var( --kdna-chart-series-muted, #9aa8a3 ); }
+
+/* ---------------------------------------------------------------------
+ * The annotation layer
+ *
+ * The sizes here are not free. The annotation renderer reserves space
+ * from the same numbers to work out where a label can sit and whether
+ * two of them collide, since PHP cannot measure text the browser has
+ * not drawn yet. Changing one of these sizes a little is fine, the
+ * placement simply becomes slightly generous or slightly tight.
+ * Changing one a lot needs the matching control at Stage 9.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__marker {
+	fill: none;
+	stroke: var( --kdna-chart-marker-colour, #6b7a75 );
+	stroke-width: var( --kdna-chart-marker-width, 2px );
+}
+
+.kdna-chart__marker--solid {
+	stroke-dasharray: none;
+}
+
+.kdna-chart__marker--dashed {
+	stroke-dasharray: var( --kdna-chart-marker-dash-dashed, 10px 8px );
+}
+
+.kdna-chart__marker--dotted {
+	stroke-dasharray: var( --kdna-chart-marker-dash-dotted, 2px 8px );
+	stroke-linecap: round;
+}
+
+.kdna-chart__marker-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-marker-label-size, 20px );
+	font-weight: var( --kdna-chart-marker-label-weight, 600 );
+	letter-spacing: var( --kdna-chart-marker-label-letter-spacing, 0.04em );
+	text-transform: var( --kdna-chart-marker-label-transform, none );
+	fill: var( --kdna-chart-marker-label-colour, #14332c );
+}
+
+/*
+ * The radius is a geometry property, so CSS can set it and a site can
+ * size its points. The renderer also writes an r attribute, which CSS
+ * overrides whenever it loads. That is deliberate: a circle with no
+ * radius is nothing at all, and a stylesheet that failed should cost a
+ * chart its polish rather than its data.
+ */
+.kdna-chart__point {
+	r: var( --kdna-chart-point-radius, 9px );
+	fill: var( --kdna-chart-point-colour, #14332c );
+	stroke: none;
+}
+
+/*
+ * A hollow point is filled with the page rather than left transparent,
+ * so the line does not run through the middle of it.
+ */
+.kdna-chart__point--hollow {
+	fill: var( --kdna-chart-point-fill-hollow, #fff );
+	stroke: var( --kdna-chart-point-colour, #14332c );
+	stroke-width: var( --kdna-chart-point-stroke-width, 3.5px );
+}
+
+.kdna-chart__point-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-point-label-size, 20px );
+	font-weight: var( --kdna-chart-point-label-weight, 500 );
+	fill: var( --kdna-chart-point-label-colour, #4a5f58 );
+}
+
+.kdna-chart__callout-value {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-callout-value-size-large, 56px );
+	font-weight: var( --kdna-chart-callout-value-weight, 700 );
+	letter-spacing: var( --kdna-chart-callout-value-letter-spacing, -0.02em );
+	fill: var( --kdna-chart-callout-value-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-chart__callout-value--small {
+	font-size: var( --kdna-chart-callout-value-size-small, 34px );
+}
+
+.kdna-chart__callout-caption {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-callout-caption-size, 20px );
+	font-weight: var( --kdna-chart-callout-caption-weight, 400 );
+	fill: var( --kdna-chart-callout-caption-colour, #6b7a75 );
+}
+
+.kdna-chart__leader {
+	fill: none;
+	stroke: var( --kdna-chart-leader-colour, #9aa8a3 );
+	stroke-width: var( --kdna-chart-leader-width, 1.75px );
+	stroke-dasharray: var( --kdna-chart-leader-dash, none );
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.kdna-chart__bracket {
+	fill: none;
+	stroke: var( --kdna-chart-bracket-colour, #9aa8a3 );
+	stroke-width: var( --kdna-chart-bracket-width, 1.75px );
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.kdna-chart__note {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-note-size, 20px );
+	font-weight: var( --kdna-chart-note-weight, 400 );
+	font-style: var( --kdna-chart-note-style, italic );
+	fill: var( --kdna-chart-note-colour, #8a968f );
+}
+
+/* ---------------------------------------------------------------------
+ * Caption and source
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__caption {
+	margin: var( --kdna-chart-caption-margin, 0.75rem 0 0 );
+	font-size: var( --kdna-chart-caption-size, 1rem );
+	font-weight: var( --kdna-chart-caption-weight, 400 );
+	line-height: var( --kdna-chart-caption-line-height, 1.5 );
+	text-align: var( --kdna-chart-caption-align, left );
+	color: var( --kdna-chart-caption-colour, #4a5f58 );
+}
+
+.kdna-chart__source {
+	margin: var( --kdna-chart-source-margin, 0.5rem 0 0 );
+	text-align: var( --kdna-chart-source-align, left );
+}
+
+.kdna-chart__source small {
+	font-size: var( --kdna-chart-source-size, 0.8125rem );
+	font-weight: var( --kdna-chart-source-weight, 400 );
+	color: var( --kdna-chart-source-colour, #8a968f );
+}
+
+/* ---------------------------------------------------------------------
+ * Placeholder
+ * ------------------------------------------------------------------ */
+
+.kdna-chart--placeholder {
+	padding: 2rem;
+	background: var( --kdna-chart-placeholder-background, #f6f7f7 );
+	border: 1px dashed var( --kdna-chart-placeholder-border, #dcdcde );
+	border-radius: 8px;
+	color: var( --kdna-chart-placeholder-colour, #50575e );
+	text-align: center;
+}
+
+.kdna-chart__placeholder-title {
+	margin: 0 0 0.25rem;
+	font-weight: 600;
+}
+
+.kdna-chart__placeholder-reason {
+	margin: 0;
+}
+
+.kdna-chart__placeholder-note {
+	margin: 0.5rem 0 0;
+	font-size: 0.8125rem;
+	opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------
+ * Hook classes
+ *
+ * These carry no rules on purpose. The renderer emits them so the
+ * Stage 9 cascade has somewhere to attach a control, and so a theme can
+ * reach a layer without the plugin having to guess what it wants:
+ *
+ *   .kdna-chart--{type}          the chart type
+ *   .kdna-chart--engine-{engine} which engine drew it
+ *   .kdna-chart__plot            every drawn mark
+ *   .kdna-chart__series          one series, with its emphasis modifier
+ *   .kdna-chart__gridlines       all gridlines
+ *   .kdna-chart__axis-labels     all tick labels
+ *   .kdna-chart__axis-titles     both axis titles
+ *   .kdna-chart__gridline--horizontal / --vertical
+ *   .kdna-chart__axis-label--x / --y
+ *   .kdna-chart__axis-title--x / --y
+ *   .kdna-chart__area--{emphasis}
+ *   .kdna-chart__markers        all marker lines
+ *   .kdna-chart__annotations    everything drawn over the plot
+ *   .kdna-chart__callouts       all callouts and their leaders
+ *   .kdna-chart__marker--{orientation}
+ *   .kdna-chart__marker-label--{orientation} / --{position}
+ *   .kdna-chart__point--filled / --none
+ *   .kdna-chart__point-label--{position}
+ *   .kdna-chart__callout-value--large
+ *   .kdna-chart__callout-caption--{size}
+ *   .kdna-chart__leader--{style}
+ *   .kdna-chart__note--{align}
+ *   .kdna-chart__value-labels   all figures printed on or beside bars
+ *   .kdna-chart__bar--positive / --negative
+ *   .kdna-chart__bar--normal
+ *   .kdna-chart__value-label--stacked / --grouped
+ *   .kdna-chart__axis-title--across / --down
+ *   .kdna-chart__segments       every wedge or ring section
+ *   .kdna-chart__segment-labels all figures on or beside a pie
+ *   .kdna-chart__legend--{position}
+ *   .kdna-chart__stat--normal
+ *   .kdna-chart__stat-number
+ *
+ * Anything that actually paints is declared above. If a class appears
+ * in the markup, is not on this list, and has no rule, that is a bug.
+ * ------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------
+ * Narrow charts
+ *
+ * Text inside the viewBox scales with the chart, so a chart at half the
+ * width has labels at half the size. These rules put the size back by
+ * raising the user unit value as the chart narrows.
+ *
+ * Two passes, on purpose. The media queries go first and key off the
+ * window, which is right often enough and works everywhere. The
+ * container queries follow and key off the chart's own width, which is
+ * right always: a chart in a narrow sidebar of a wide page has exactly
+ * the same problem as a chart on a phone, and only its container knows
+ * it. Where container queries are supported they land later and win.
+ *
+ * Stage 9 turns these into responsive controls. These are the defaults
+ * those controls start from.
+ * ------------------------------------------------------------------ */
+
+@media ( max-width: 900px ) {
+	.kdna-chart {
+		--kdna-chart-axis-label-size: 22px;
+		--kdna-chart-axis-title-size: 22px;
+		--kdna-chart-line-width-strong: 4px;
+		--kdna-chart-line-width-normal: 3px;
+		--kdna-chart-line-width-muted: 2.5px;
+	}
+}
+
+@media ( max-width: 600px ) {
+	.kdna-chart {
+		--kdna-chart-axis-label-size: 24px;
+		--kdna-chart-axis-title-size: 24px;
+		--kdna-chart-line-width-strong: 5px;
+		--kdna-chart-line-width-normal: 4px;
+		--kdna-chart-line-width-muted: 3px;
+		--kdna-chart-gridline-width: 2px;
+		--kdna-chart-margin-block: 1.5rem;
+	}
+}
+
+/*
+ * An element cannot be its own container, so these set the properties on
+ * the frame rather than the block. The svg is inside the frame and
+ * inherits them; the caption and source are outside it and do not need
+ * them, since they are sized in rem and never scaled by a viewBox.
+ */
+@container kdna-chart ( max-width: 640px ) {
+	.kdna-chart__frame {
+		--kdna-chart-value-label-size: 24px;
+		--kdna-chart-axis-label-size: 24px;
+		--kdna-chart-axis-title-size: 24px;
+		--kdna-chart-marker-label-size: 24px;
+		--kdna-chart-point-label-size: 24px;
+		--kdna-chart-note-size: 24px;
+		--kdna-chart-callout-caption-size: 24px;
+		--kdna-chart-segment-label-size: 24px;
+		--kdna-chart-legend-label-size: 24px;
+		--kdna-chart-line-width-strong: 4px;
+		--kdna-chart-line-width-normal: 3px;
+		--kdna-chart-line-width-muted: 2.5px;
+	}
+}
+
+/*
+ * 24px is the ceiling, not a coincidence. It is the size the scale
+ * engine reserves padding for, so a label at this size fits the space
+ * kept for it exactly. Going past it needs a matching padding override.
+ */
+@container kdna-chart ( max-width: 420px ) {
+	.kdna-chart__frame {
+		--kdna-chart-value-label-size: 24px;
+		--kdna-chart-axis-label-size: 24px;
+		--kdna-chart-axis-title-size: 24px;
+		--kdna-chart-marker-label-size: 26px;
+		--kdna-chart-point-label-size: 26px;
+		--kdna-chart-note-size: 26px;
+		--kdna-chart-callout-caption-size: 26px;
+		--kdna-chart-callout-value-size-large: 64px;
+		--kdna-chart-line-width-strong: 5.5px;
+		--kdna-chart-line-width-normal: 4.5px;
+		--kdna-chart-line-width-muted: 3.5px;
+		--kdna-chart-gridline-width: 2.5px;
+	}
+}
+
+/* ---------------------------------------------------------------------
+ * Print
+ *
+ * Charts have to print, and a gradient fill at 16 per cent opacity is
+ * invisible on paper unless the browser is told to keep it.
+ * ------------------------------------------------------------------ */
+
+@media print {
+	.kdna-chart {
+		break-inside: avoid;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+}
