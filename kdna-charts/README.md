@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 6 of 13, SVG renderer, bar and column
+- **Build stage:** 7 of 13, SVG renderer, all seven chart types
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -36,6 +36,8 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | Annotation layer: markers, points, callouts, leaders, notes | 5 | Done |
 | Label collision avoidance | 5 | Done |
 | SVG renderer, bar and column, grouped and stacked | 6 | Done |
+| SVG renderer, pie, donut and stat blocks | 7 | Done |
+| All seven v1 chart types draw | 7 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -371,6 +373,67 @@ bar chart, and in both cases it sits at the value 40.
 - **Bars are obstacles for the annotation layer**, the way the line is
   on a line chart, so a callout is never dropped on one.
 
+## Pie, donut and stat
+
+**Three shapes of chart, not seven types.** Plotted charts map values
+onto axes. Radial charts divide a circle by share. A stat block is
+typography. Only the first has a scale, because only the first has
+anything to map: a segment's size comes from its share of a total, not
+from a position on an axis.
+
+### Arc geometry
+
+Angles run clockwise in degrees, with -90 at twelve o'clock, which is
+where a reader starts. That convention lives in one method and nothing
+else has to know it.
+
+Two cases are worth naming:
+
+- **A whole turn draws nothing.** An SVG arc whose start and end are
+  the same point is empty, so a chart of one segment would come out
+  blank. It is drawn as two half turns instead, and on a donut the
+  inner circle is swept the other way so the fill rule takes it out of
+  the middle rather than filling it.
+- **A lone segment's figure goes in the centre.** The middle of a whole
+  turn is the far side of the circle, which is nowhere a reader would
+  look. On a donut that centre is exactly what the hole was left for.
+
+### Labels
+
+`inside` prints the share on the segment, reversed out, and darkened
+again on the pale half of the series ramp. `outside` stands each label
+off on a leader that runs out along the segment's own radius and then
+turns horizontal, so the text sits level rather than at an angle.
+`legend` puts them in a legend instead.
+
+A segment too narrow to hold its figure goes without one. The measure
+of "narrow" is the arc at the radius the figure sits on, capped at the
+diameter, **not** the chord between the segment's ends. The chord is
+the obvious measure and it is wrong at both extremes: a segment of a
+whole turn has a chord of nothing because its ends are the same point,
+and a three hundred degree segment has almost as little. Both have room
+to spare, and both would have silently lost their figure.
+
+A datum carrying its own `suffix` shows that instead of a percentage.
+An author who wrote `4.2` with `m` has said what unit the figure is in,
+and a chart of millions should say millions rather than thirty one per
+cent.
+
+### Why a stat block is not an SVG
+
+Every other type is drawn, and drawing belongs in a viewBox. A stat
+block is not drawn, it is **set**: a row of figures with their labels,
+which has to wrap on a narrow screen, reflow with the reader's type
+size, and be selectable and translatable like the article around it.
+
+Text inside a viewBox does none of that. It scales with the frame
+rather than with the reader, and it cannot wrap without being measured
+first, which PHP cannot do. So a stat block is real HTML in a real
+grid, and the responsive row is a responsive row rather than an
+impression of one. It is a description list, because that is what these
+are: a term and the figure that goes with it. The figure is shown first
+and read second, which is the right way round for both.
+
 ## File structure so far
 
 ```
@@ -402,6 +465,31 @@ kdna-charts/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 7
+
+1. Import a pie with three or four slices. Confirm it starts at twelve
+   o'clock and the slices are in the order the file gives them.
+2. Change the type to `donut` and confirm a hole appears. Change
+   `inner_radius` and confirm the hole follows.
+3. Set `labels` to `inside`, then `outside`, then `legend`, then
+   `none`. Confirm each does what it says, and that outside labels get
+   leader lines that turn horizontal before the text.
+4. Set `segment_gap` and confirm the slices separate.
+5. Set `start_angle` to 0 and confirm the first slice starts at three
+   o'clock.
+6. Make a chart of one slice at 100 per cent. It must draw a full ring
+   rather than nothing, with its figure in the centre.
+7. Add a value of 0 and one that is negative. Both should be left out,
+   and the rest should still add up to a full circle.
+8. Set `legend` to top, bottom, left and right in turn. A long legend
+   along the bottom should wrap onto more rows.
+9. Build a stat chart with three or four figures and a suffix on one.
+   Confirm the figures are large, the suffix is smaller and in
+   proportion, and the labels sit beneath.
+10. Narrow the browser. The stat row should wrap; select the text and
+    confirm it is real text rather than a picture of it.
+11. Set `columns` and `align` on the stat chart and confirm both work.
 
 ## Testing Stage 6
 

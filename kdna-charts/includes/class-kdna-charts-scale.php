@@ -296,6 +296,42 @@ class KDNA_Charts_Scale {
 	}
 
 	/**
+	 * Canvas and plot area for a chart that has no axes to scale against.
+	 *
+	 * Pie, donut and stat get no scale, because there is nothing to map:
+	 * a segment's size comes from its share of a total, not from a
+	 * position on an axis. They still need a canvas of the right
+	 * proportion and a rectangle to draw inside, and working that out
+	 * twice would be two places for an aspect ratio to be read wrongly.
+	 *
+	 * @param array $definition Chart definition.
+	 * @param array $overrides  Same keys for_chart() accepts.
+	 * @return array Keys canvas and plot.
+	 */
+	public static function frame( array $definition, array $overrides = array() ) {
+		$scale             = new self();
+		$scale->type       = (string) ( $definition['type'] ?? '' );
+		$scale->definition = $definition;
+		$scale->canvas     = $scale->resolve_canvas( $overrides );
+
+		$padding = self::PADDING_MINIMUM;
+		if ( isset( $overrides['padding'] ) && is_array( $overrides['padding'] ) ) {
+			foreach ( array( 'top', 'right', 'bottom', 'left' ) as $edge ) {
+				if ( isset( $overrides['padding'][ $edge ] ) && is_numeric( $overrides['padding'][ $edge ] ) ) {
+					$padding[ $edge ] = (float) $overrides['padding'][ $edge ];
+				}
+			}
+		}
+		$scale->padding = $padding;
+		$scale->plot    = $scale->resolve_plot_area();
+
+		return array(
+			'canvas' => $scale->canvas,
+			'plot'   => $scale->plot,
+		);
+	}
+
+	/**
 	 * Builds a scale from bare numbers, for tests and for callers that
 	 * have a domain but no chart.
 	 *
