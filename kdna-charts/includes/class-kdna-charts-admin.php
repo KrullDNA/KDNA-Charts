@@ -308,7 +308,7 @@ class KDNA_Charts_Admin {
 
 	/*
 	 * ====================================================================
-	 * Add New, placeholder until Stage 8
+	 * Add New
 	 * ====================================================================
 	 */
 
@@ -320,9 +320,10 @@ class KDNA_Charts_Admin {
 		$create_action_url = admin_url( 'admin.php?action=kdna_charts_create' );
 		$nonce_field_name  = self::NONCE_CREATE;
 		$cancel_url        = self::get_list_url();
+		$import_url        = KDNA_Charts_Import::get_import_url();
 		$types             = KDNA_Charts_Schema::TYPES;
 
-		$template = KDNA_CHARTS_PATH . 'templates/admin-add-new-placeholder.php';
+		$template = KDNA_CHARTS_PATH . 'templates/admin-type-chooser-modal.php';
 		if ( ! file_exists( $template ) ) {
 			return;
 		}

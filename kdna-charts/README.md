@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 7 of 13, SVG renderer, all seven chart types
+- **Build stage:** 8 of 13, the chart editor
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -38,6 +38,10 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | SVG renderer, bar and column, grouped and stacked | 6 | Done |
 | SVG renderer, pie, donut and stat blocks | 7 | Done |
 | All seven v1 chart types draw | 7 | Done |
+| Chart editor: Data, Annotations, Options and Style tabs | 8 | Done |
+| Spreadsheet grid with clipboard paste, segment grouping | 8 | Done |
+| Live preview, rendered by the server | 8 | Done |
+| Type chooser modal on Add New | 8 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -434,6 +438,69 @@ impression of one. It is a description list, because that is what these
 are: a term and the figure that goes with it. The figure is shown first
 and read second, which is the right way round for both.
 
+## The editor
+
+Four tabs over one Alpine component holding the whole definition, with
+a preview beside them.
+
+**One door in.** The editor's state, an imported file and a definition
+written by hand all reach storage through the same two steps: the
+importer's validator, then `save_definition()`. Nothing in the editor
+writes meta directly. That is worth the small awkwardness of running a
+validator over data the editor just produced, because it means one
+answer to what a chart may contain and no way for the editor to save
+something the importer would have refused.
+
+**The preview is drawn on the server.** The renderer is PHP, and a
+second renderer in JavaScript would be two answers to every question of
+geometry, drifting apart one fix at a time. The editor posts its state
+and gets back the same markup the front end will serve. It costs a
+debounced request per edit and it cannot lie about the result.
+
+**A save that did not come from this post is refused.** The editor
+seeds itself from the definition printed into the page. If that never
+arrives, because a script was blocked or reordered by an optimiser,
+Alpine falls back to an empty chart, the screen looks like a brand new
+one, and pressing Update would write that emptiness over real data.
+The seed carries the post id and the fallback does not, so a mismatch
+is an exact statement that this state did not come from this post. The
+save is refused and the next page load says so. It is deliberately not
+a "did it shrink?" check: deleting rows is something people do on
+purpose.
+
+### Things learned by looking at it
+
+**A select cannot show what is not there.** Two separate bugs, both
+found by rendering the editor and reading it:
+
+- `x-model` binds a select before an `x-for` inside it has rendered its
+  options, so the select falls back to its first option while the data
+  underneath still holds the real one. The screen lies, and the moment
+  anybody touches that select the lie is committed. The vocabularies
+  are fixed and PHP already knows them, so the options are printed
+  before Alpine looks.
+- An enum with no stored value has the same problem for the same
+  reason. Per annotation enums are given the schema's default when the
+  editor loads, so the control says what will actually be drawn. Chart
+  options are not, because those sit in the style cascade and an unset
+  one has to stay unset; their selects carry an explicit "Default (x)"
+  choice instead.
+
+**Splitting a segment keeps the point in both halves.** That is what
+segments are for, and two that share an endpoint join seamlessly while
+two that do not leave a gap. Joining one back drops the duplicate.
+
+**A comma is not always a separator.** A single column of figures with
+thousands separators looks exactly like two columns of CSV, and
+splitting `1,234` into 1 and 234 turns a paste of real data into
+nonsense. A comma split is only accepted when the result is the shape
+of a table: every row the same width.
+
+**A pasted cell that is not a number blanks the cell** rather than
+leaving what was there. The paste said what should be in it, and
+quietly keeping an old figure under a new label is how a chart ends up
+lying.
+
 ## File structure so far
 
 ```
@@ -452,19 +519,57 @@ kdna-charts/
 │   ├── class-kdna-charts-editor.php
 │   └── class-kdna-charts-admin.php
 ├── templates/
-│   ├── admin-add-new-placeholder.php
+│   ├── admin-editor-data.php
+│   ├── admin-editor-annotations.php
+│   ├── admin-editor-options.php
 │   ├── admin-editor-import.php
+│   ├── admin-type-chooser-modal.php
 │   ├── render-caption.php
 │   ├── render-source.php
 │   └── render-placeholder.php
 ├── assets/
-│   └── css/
-│       ├── kdna-admin.css
-│       └── kdna-charts.css
+│   ├── css/
+│   │   ├── kdna-admin.css
+│   │   └── kdna-charts.css
+│   └── js/
+│       ├── alpine.min.js
+│       └── kdna-admin.js
 ├── docs/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 8
+
+1. Click **Add New**. A type chooser appears. Pick one and confirm a
+   chart is created and opens in the editor.
+2. Open the collagen chart. Confirm the Data tab shows two segments,
+   the first dotted and muted, the second solid and strong. If those
+   selects say anything else, something is wrong.
+3. Confirm the preview on the right shows the chart, and that editing a
+   value redraws it within a moment.
+4. Copy two columns out of a spreadsheet and paste into any cell of the
+   point grid. It should fill from there, adding rows as it needs them.
+5. On a bar or column chart, paste a block into the Label column. It
+   should bring the names and the figures in together, adding series
+   for extra columns.
+6. Paste a column of figures written as `1,234` and `56%`. They should
+   come in as numbers, not be split on their own separators.
+7. Press **Split here** on an interior point. The segment becomes two,
+   and the point you split on appears at the end of the first and the
+   start of the second. Change one half to dotted and confirm the line
+   changes character there.
+8. Press **Join to the one above** and confirm the duplicate point is
+   not left behind.
+9. On the Annotations tab, add a callout, press **Make it a range**,
+   and confirm a bracket appears in the preview.
+10. On the Options tab, confirm only the options this chart type
+    understands appear, and that each shows its stored value or
+    **Default**.
+11. Save, reload, and confirm everything you entered came back.
+12. Block `kdna-admin.js` in the browser's dev tools and reload. The
+    editor should refuse to appear and say so, and pressing Update
+    should leave the chart untouched with a notice explaining why.
 
 ## Testing Stage 7
 
