@@ -266,37 +266,35 @@ class KDNA_Charts_Annotations {
 	 * ====================================================================
 	 */
 
+	/**
+	 * Marker lines.
+	 *
+	 * A marker names an axis and a value on it, and is drawn
+	 * perpendicular to that axis. On a column chart a marker at a value
+	 * runs across the plot; turn the chart on its side and the same
+	 * marker runs down it, still at the same value. The names vertical
+	 * and horizontal describe how a marker looks on an upright chart,
+	 * and which axis it belongs to on any chart, which is the part that
+	 * has to survive a change of type.
+	 */
 	private function marker_lines() {
 		$plot  = $this->scale->plot_area();
 		$lines = array();
 
 		foreach ( $this->valid_markers() as $marker ) {
-			$style = $this->one_of( $marker['style'] ?? '', KDNA_Charts_Schema::LINE_STYLES, 'dashed' );
+			$style  = $this->one_of( $marker['style'] ?? '', KDNA_Charts_Schema::LINE_STYLES, 'dashed' );
+			$axis   = ( 'vertical' === $marker['type'] ) ? 'x' : 'y';
+			$at     = $this->scale->position( $axis, $marker[ $axis ] );
+			$across = 'across' === $this->scale->axis_direction( $axis );
 
-			if ( 'vertical' === $marker['type'] ) {
-				$x       = $this->scale->x( $marker['x'] );
-				$lines[] = KDNA_Charts_Renderer::tag(
-					'line',
-					array(
-						'class' => KDNA_Charts_Renderer::css( 'marker', array( 'vertical', $style ) ),
-						'x1'    => $x,
-						'y1'    => $plot['y'],
-						'x2'    => $x,
-						'y2'    => $plot['bottom'],
-					)
-				);
-				continue;
-			}
-
-			$y       = $this->scale->y( $marker['y'] );
 			$lines[] = KDNA_Charts_Renderer::tag(
 				'line',
 				array(
-					'class' => KDNA_Charts_Renderer::css( 'marker', array( 'horizontal', $style ) ),
-					'x1'    => $plot['x'],
-					'y1'    => $y,
-					'x2'    => $plot['right'],
-					'y2'    => $y,
+					'class' => KDNA_Charts_Renderer::css( 'marker', array( $marker['type'], $style ) ),
+					'x1'    => $across ? $at : $plot['x'],
+					'y1'    => $across ? $plot['y'] : $at,
+					'x2'    => $across ? $at : $plot['right'],
+					'y2'    => $across ? $plot['bottom'] : $at,
 				)
 			);
 		}
@@ -315,36 +313,38 @@ class KDNA_Charts_Annotations {
 				continue;
 			}
 
+			$axis   = ( 'vertical' === $marker['type'] ) ? 'x' : 'y';
+			$at     = $this->scale->position( $axis, $marker[ $axis ] );
+			$across = 'across' === $this->scale->axis_direction( $axis );
+
 			$position = $this->one_of(
 				$marker['label_position'] ?? '',
 				KDNA_Charts_Schema::MARKER_LABEL_POSITIONS,
-				'vertical' === $marker['type'] ? 'top' : 'right'
+				$across ? 'top' : 'right'
 			);
 
-			if ( 'vertical' === $marker['type'] ) {
-				$x = $this->scale->x( $marker['x'] );
-				if ( 'bottom' === $position ) {
-					$y        = $plot['bottom'] + self::MARKER_LABEL_GAP;
-					$baseline = 'hanging';
-					$nudge    = array( 0, 1 );
-				} else {
-					$y        = $plot['y'] - self::MARKER_LABEL_GAP;
-					$baseline = 'text-after-edge';
-					$nudge    = array( 0, -1 );
-				}
-				$anchor = 'middle';
+			if ( $across ) {
+				/*
+				 * The line runs down the plot, so its ends are above and
+				 * below it. A heading asked to sit left or right of such
+				 * a line has nothing to sit against, so it takes the top.
+				 */
+				$at_bottom = 'bottom' === $position;
+				$x         = $at;
+				$y         = $at_bottom
+					? $plot['bottom'] + self::MARKER_LABEL_GAP
+					: $plot['y'] - self::MARKER_LABEL_GAP;
+				$anchor    = 'middle';
+				$baseline  = $at_bottom ? 'hanging' : 'text-after-edge';
+				$nudge     = array( 0, $at_bottom ? 1 : -1 );
 			} else {
-				$y = $this->scale->y( $marker['y'] );
-				if ( 'left' === $position ) {
-					$x      = $plot['x'] + self::MARKER_LABEL_GAP;
-					$anchor = 'start';
-					$nudge  = array( 1, 0 );
-				} else {
-					$x      = $plot['right'] - self::MARKER_LABEL_GAP;
-					$anchor = 'end';
-					$nudge  = array( -1, 0 );
-				}
+				// The line runs across the plot, so its ends are its sides.
+				$at_left  = in_array( $position, array( 'left', 'bottom' ), true );
+				$x        = $at_left ? $plot['x'] + self::MARKER_LABEL_GAP : $plot['right'] - self::MARKER_LABEL_GAP;
+				$y        = $at - self::MARKER_LABEL_GAP;
+				$anchor   = $at_left ? 'start' : 'end';
 				$baseline = 'text-after-edge';
+				$nudge    = array( 0, -1 );
 			}
 
 			$placed = $this->place_text( $x, $y, $label, $size, $anchor, $baseline, $nudge, true );
@@ -402,9 +402,8 @@ class KDNA_Charts_Annotations {
 				continue;
 			}
 
-			$x     = $this->scale->x( $point['x'] );
-			$y     = $this->scale->y( $point['y'] );
-			$style = $this->one_of( $point['style'] ?? '', KDNA_Charts_Schema::POINT_STYLES, 'filled' );
+			list( $x, $y ) = $this->scale->point( $point['x'], $point['y'] );
+			$style         = $this->one_of( $point['style'] ?? '', KDNA_Charts_Schema::POINT_STYLES, 'filled' );
 
 			if ( 'none' !== $style ) {
 				/*
@@ -630,7 +629,7 @@ class KDNA_Charts_Annotations {
 		if ( ! is_numeric( $pair['x'] ) || ! is_numeric( $pair['y'] ) ) {
 			return null;
 		}
-		return array( $this->scale->x( $pair['x'] ), $this->scale->y( $pair['y'] ) );
+		return $this->scale->point( $pair['x'], $pair['y'] );
 	}
 
 	/**
@@ -1223,44 +1222,43 @@ class KDNA_Charts_Annotations {
 		$plot = $this->scale->plot_area();
 		$size = KDNA_Charts_Scale::ASSUMED_LABEL_SIZE;
 
-		foreach ( $this->scale->y_ticks() as $tick ) {
-			$label = (string) ( $tick['label'] ?? '' );
-			if ( '' === $label ) {
-				continue;
-			}
-			$this->reserve(
-				$this->box_from(
-					$plot['x'] - KDNA_Charts_Scale::TICK_LABEL_GAP_X,
-					$tick['position'],
-					$this->text_width( $label, $size ),
-					$size * self::LINE_HEIGHT,
-					'end',
-					'central'
-				)
-			);
-		}
+		foreach ( array( 'x', 'y' ) as $axis ) {
+			$ticks  = ( 'x' === $axis ) ? $this->scale->x_ticks() : $this->scale->y_ticks();
+			$across = 'across' === $this->scale->axis_direction( $axis );
 
-		foreach ( $this->scale->x_ticks() as $tick ) {
-			$label = (string) ( $tick['label'] ?? '' );
-			if ( '' === $label ) {
-				continue;
+			foreach ( $ticks as $tick ) {
+				$label = (string) ( $tick['label'] ?? '' );
+				if ( '' === $label ) {
+					continue;
+				}
+				$this->reserve(
+					$this->box_from(
+						$across ? $tick['position'] : $plot['x'] - KDNA_Charts_Scale::TICK_LABEL_GAP_X,
+						$across ? $plot['bottom'] + KDNA_Charts_Scale::TICK_LABEL_GAP_Y : $tick['position'],
+						$this->text_width( $label, $size ),
+						$size * self::LINE_HEIGHT,
+						$across ? 'middle' : 'end',
+						$across ? 'hanging' : 'central'
+					)
+				);
 			}
-			$this->reserve(
-				$this->box_from(
-					$tick['position'],
-					$plot['bottom'] + KDNA_Charts_Scale::TICK_LABEL_GAP_Y,
-					$this->text_width( $label, $size ),
-					$size * self::LINE_HEIGHT,
-					'middle',
-					'hanging'
-				)
-			);
 		}
 	}
 
 	private function collect_series_points() {
 		$series = $this->definition['series'] ?? array();
 		if ( ! is_array( $series ) ) {
+			return;
+		}
+
+		/*
+		 * On a bar chart there is no line to keep clear of, there are
+		 * bars, and a callout dropped on one is just as unreadable. Each
+		 * is reserved as occupied space, which keeps callouts off them
+		 * and keeps notes off the figures printed on them.
+		 */
+		if ( in_array( (string) ( $this->definition['type'] ?? '' ), array( 'bar', 'column' ), true ) ) {
+			$this->reserve_bars( $series );
 			return;
 		}
 
@@ -1300,6 +1298,85 @@ class KDNA_Charts_Annotations {
 		}
 
 		$this->series_points = array_merge( $this->series_points, $sampled );
+	}
+
+	/**
+	 * Marks every bar as occupied space.
+	 *
+	 * Stacked series share a slot, so the reservation is the whole slot
+	 * from the baseline to the furthest end reached in it, rather than
+	 * one box per segment.
+	 */
+	private function reserve_bars( array $series ) {
+		$categories = $this->scale->categories();
+		if ( empty( $categories ) ) {
+			return;
+		}
+
+		$with_data = array();
+		foreach ( $series as $entry ) {
+			if ( is_array( $entry ) && ! empty( $entry['data'] ) && is_array( $entry['data'] ) ) {
+				$with_data[] = array_values( $entry['data'] );
+			}
+		}
+		if ( empty( $with_data ) ) {
+			return;
+		}
+
+		$count    = count( $with_data );
+		$stacked  = $this->scale->is_stacked();
+		$baseline = $this->scale->position( 'y', $this->scale->baseline() );
+
+		foreach ( array_keys( $categories ) as $index ) {
+			$reach_up   = 0.0;
+			$reach_down = 0.0;
+
+			foreach ( $with_data as $position => $data ) {
+				$datum = isset( $data[ $index ] ) && is_array( $data[ $index ] ) ? $data[ $index ] : null;
+				if ( null === $datum || ! isset( $datum['value'] ) || ! is_numeric( $datum['value'] ) ) {
+					continue;
+				}
+				$value = (float) $datum['value'];
+
+				if ( $stacked ) {
+					if ( $value >= 0 ) {
+						$reach_up += $value;
+					} else {
+						$reach_down += $value;
+					}
+					continue;
+				}
+
+				// Grouped bars each stand alone, so each is reserved on
+				// its own rather than as part of a slot.
+				$band = $this->scale->band( $index, $position, $count );
+				$this->reserve( $this->bar_box( $band, $baseline, $this->scale->position( 'y', $value ) ) );
+			}
+
+			if ( ! $stacked ) {
+				continue;
+			}
+
+			$band = $this->scale->band( $index, 0, 1 );
+			foreach ( array( $reach_up, $reach_down ) as $reach ) {
+				if ( 0.0 === $reach ) {
+					continue;
+				}
+				$this->reserve( $this->bar_box( $band, $baseline, $this->scale->position( 'y', $reach ) ) );
+			}
+		}
+	}
+
+	/**
+	 * One bar as a box, in whichever direction this chart runs.
+	 */
+	private function bar_box( array $band, $near, $far ) {
+		$start  = min( $near, $far );
+		$length = abs( $far - $near );
+
+		return $this->scale->is_horizontal()
+			? array( $start, $band['start'], $start + $length, $band['start'] + $band['thickness'] )
+			: array( $band['start'], $start, $band['start'] + $band['thickness'], $start + $length );
 	}
 
 	/**

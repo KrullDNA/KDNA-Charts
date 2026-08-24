@@ -173,6 +173,75 @@ class KDNA_Charts_Scale {
 		return KDNA_Charts_Schema::uses_axes( $type );
 	}
 
+	/*
+	 * ====================================================================
+	 * Orientation
+	 * ====================================================================
+	 *
+	 * A bar chart is a column chart turned on its side, and that is the
+	 * whole of the difference. The axes keep their names: x is always
+	 * the category axis and y is always the value axis, whichever way
+	 * the bars point. What changes is which screen direction each of
+	 * them runs along.
+	 *
+	 * Keeping the names fixed is what lets a chart switch between bar
+	 * and column without its definition being rewritten, and it is the
+	 * same reasoning that keeps annotations stored when a type cannot
+	 * draw them. An author writes axes.x.categories once.
+	 *
+	 * One rule follows from this and settles almost everything else: a
+	 * gridline, or a marker, belonging to an axis is drawn
+	 * perpendicular to that axis's direction. Value gridlines on a
+	 * column chart run across; on a bar chart the same gridlines run
+	 * down. Nothing else needs to know which type it is looking at.
+	 */
+
+	/** 'horizontal' when the bars lie down, 'vertical' otherwise. */
+	public function orientation() {
+		return 'bar' === $this->type ? 'horizontal' : 'vertical';
+	}
+
+	public function is_horizontal() {
+		return 'bar' === $this->type;
+	}
+
+	/**
+	 * Which screen direction an axis runs along.
+	 *
+	 * @param string $axis 'x' or 'y'.
+	 * @return string 'across' or 'down'.
+	 */
+	public function axis_direction( $axis ) {
+		if ( $this->is_horizontal() ) {
+			return ( 'x' === $axis ) ? 'down' : 'across';
+		}
+		return ( 'x' === $axis ) ? 'across' : 'down';
+	}
+
+	/**
+	 * The screen coordinate a value sits at along its own axis.
+	 *
+	 * The number is an x on screen when that axis runs across, and a y
+	 * when it runs down. Callers that need a full coordinate pair ask
+	 * point() instead.
+	 */
+	public function position( $axis, $value, $clamp = false ) {
+		return ( 'x' === $axis )
+			? $this->x( $value, $clamp )
+			: $this->y( $value, $clamp );
+	}
+
+	/**
+	 * The extent of an axis on screen, as a start and a length.
+	 *
+	 * @return array Keys start and length.
+	 */
+	public function axis_extent( $axis ) {
+		return ( 'across' === $this->axis_direction( $axis ) )
+			? array( 'start' => $this->plot['x'], 'length' => $this->plot['width'] )
+			: array( 'start' => $this->plot['y'], 'length' => $this->plot['height'] );
+	}
+
 	/**
 	 * Builds a scale for a chart definition.
 	 *
@@ -311,10 +380,23 @@ class KDNA_Charts_Scale {
 	private function resolve_padding( array $overrides ) {
 		$padding = self::PADDING_MINIMUM;
 
-		$has_y_title = '' !== (string) ( $this->definition['axes']['y']['label'] ?? '' );
-		$has_x_title = '' !== (string) ( $this->definition['axes']['x']['label'] ?? '' );
+		/*
+		 * Which axis lands on which edge depends on the orientation, not
+		 * on the axis's name. On a column chart the value axis is down
+		 * the left and the categories are along the bottom; on a bar
+		 * chart they swap places, and so does everything reserved for
+		 * them.
+		 */
+		$down_axis   = ( 'down' === $this->axis_direction( 'x' ) ) ? 'x' : 'y';
+		$across_axis = ( 'x' === $down_axis ) ? 'y' : 'x';
 
-		$y_label_width = $this->widest_label( $this->y_ticks );
+		$down_ticks   = ( 'x' === $down_axis ) ? $this->x_ticks : $this->y_ticks;
+		$across_ticks = ( 'x' === $across_axis ) ? $this->x_ticks : $this->y_ticks;
+
+		$has_y_title = '' !== (string) ( $this->definition['axes'][ $down_axis ]['label'] ?? '' );
+		$has_x_title = '' !== (string) ( $this->definition['axes'][ $across_axis ]['label'] ?? '' );
+
+		$y_label_width = $this->widest_label( $down_ticks );
 		if ( $y_label_width > 0 ) {
 			$padding['left'] = max(
 				$padding['left'],
@@ -325,7 +407,7 @@ class KDNA_Charts_Scale {
 		}
 
 		$label_height = self::ASSUMED_LABEL_SIZE * self::LABEL_LINE_HEIGHT;
-		if ( ! empty( $this->x_ticks ) ) {
+		if ( ! empty( $across_ticks ) ) {
 			$padding['bottom'] = max(
 				$padding['bottom'],
 				self::EDGE_INSET + ( $has_x_title ? self::AXIS_TITLE_SPACE : 0 ) + $label_height + self::TICK_LABEL_GAP_Y
@@ -350,7 +432,7 @@ class KDNA_Charts_Scale {
 		 * so half of it hangs past. Without this the final label on a
 		 * chart running to its own maximum is cut off by the canvas.
 		 */
-		$x_label_width = $this->widest_label( $this->x_ticks );
+		$x_label_width = $this->widest_label( $across_ticks );
 		if ( $x_label_width > 0 ) {
 			$padding['right'] = max( $padding['right'], self::EDGE_INSET + $x_label_width / 2 );
 			$padding['left']  = max( $padding['left'], self::EDGE_INSET + $x_label_width / 2 );
@@ -396,6 +478,15 @@ class KDNA_Charts_Scale {
 				continue;
 			}
 			if ( '' === trim( (string) ( $marker['label'] ?? '' ) ) ) {
+				continue;
+			}
+			/*
+			 * A marker on the category axis is drawn perpendicular to it,
+			 * so on a bar chart it runs across the plot and its heading
+			 * sits at one end rather than above. Nothing needs reserving
+			 * at the top for it in that case.
+			 */
+			if ( 'down' === $this->axis_direction( 'x' ) ) {
 				continue;
 			}
 			$edge = ( 'bottom' === ( $marker['label_position'] ?? 'top' ) ) ? 'bottom' : 'top';
@@ -639,7 +730,60 @@ class KDNA_Charts_Scale {
 			}
 		}
 
+		/*
+		 * A stacked chart is measured by its totals, not its parts. An
+		 * axis inferred from the largest single value would run out
+		 * partway up the tallest stack, and the bars would be drawn
+		 * outside the plot.
+		 */
+		if ( 'y' === $axis && $this->is_stacked() ) {
+			foreach ( $this->stack_totals() as $total ) {
+				$values[] = $total;
+			}
+		}
+
 		return $values;
+	}
+
+	/** True when this chart stacks its series rather than grouping them. */
+	public function is_stacked() {
+		if ( ! in_array( $this->type, array( 'bar', 'column' ), true ) ) {
+			return false;
+		}
+		return 'stacked' === ( $this->definition['options']['arrangement'] ?? '' );
+	}
+
+	/**
+	 * The running totals a stacked chart reaches in each category.
+	 *
+	 * Positives and negatives are totalled apart, because they stack in
+	 * opposite directions from the baseline and adding them together
+	 * would report a stack that reaches neither end.
+	 *
+	 * @return float[]
+	 */
+	public function stack_totals() {
+		$positive = array();
+		$negative = array();
+
+		foreach ( $this->series() as $entry ) {
+			if ( ! is_array( $entry ) || empty( $entry['data'] ) || ! is_array( $entry['data'] ) ) {
+				continue;
+			}
+			foreach ( array_values( $entry['data'] ) as $index => $datum ) {
+				if ( ! is_array( $datum ) || ! isset( $datum['value'] ) || ! is_numeric( $datum['value'] ) ) {
+					continue;
+				}
+				$value = (float) $datum['value'];
+				if ( $value >= 0 ) {
+					$positive[ $index ] = ( $positive[ $index ] ?? 0.0 ) + $value;
+					continue;
+				}
+				$negative[ $index ] = ( $negative[ $index ] ?? 0.0 ) + $value;
+			}
+		}
+
+		return array_merge( array_values( $positive ), array_values( $negative ) );
 	}
 
 	private function declared_tick_values( $axis ) {
@@ -970,15 +1114,7 @@ class KDNA_Charts_Scale {
 	 * belongs.
 	 */
 	public function x( $value, $clamp = false ) {
-		$span = $this->x_domain['max'] - $this->x_domain['min'];
-		if ( 0.0 === (float) $span ) {
-			return round( $this->plot['x'] + $this->plot['width'] / 2, self::PRECISION );
-		}
-		$fraction = ( (float) $value - $this->x_domain['min'] ) / $span;
-		if ( $clamp ) {
-			$fraction = max( 0.0, min( 1.0, $fraction ) );
-		}
-		return round( $this->plot['x'] + $fraction * $this->plot['width'], self::PRECISION );
+		return $this->map( 'x', $value, $clamp );
 	}
 
 	/**
@@ -989,15 +1125,42 @@ class KDNA_Charts_Scale {
 	 * about it.
 	 */
 	public function y( $value, $clamp = false ) {
-		$span = $this->y_domain['max'] - $this->y_domain['min'];
+		return $this->map( 'y', $value, $clamp );
+	}
+
+	/**
+	 * Maps a value on one axis to its screen coordinate.
+	 *
+	 * The only subtlety is which way the axis counts. Screen y grows
+	 * downward while a value axis grows upward, so a value axis running
+	 * down is inverted. Everything else counts the same way the screen
+	 * does: category slots run left to right on a column chart and top
+	 * to bottom on a bar chart, which is the order a reader expects in
+	 * both cases.
+	 */
+	private function map( $axis, $value, $clamp = false ) {
+		$domain = ( 'x' === $axis ) ? $this->x_domain : $this->y_domain;
+		$extent = $this->axis_extent( $axis );
+		$span   = $domain['max'] - $domain['min'];
+
 		if ( 0.0 === (float) $span ) {
-			return round( $this->plot['y'] + $this->plot['height'] / 2, self::PRECISION );
+			return round( $extent['start'] + $extent['length'] / 2, self::PRECISION );
 		}
-		$fraction = ( (float) $value - $this->y_domain['min'] ) / $span;
+
+		$fraction = ( (float) $value - $domain['min'] ) / $span;
 		if ( $clamp ) {
 			$fraction = max( 0.0, min( 1.0, $fraction ) );
 		}
-		return round( $this->plot['bottom'] - $fraction * $this->plot['height'], self::PRECISION );
+
+		// A value axis running down is the one that counts backwards.
+		$inverted = ( 'y' === $axis ) && ( 'down' === $this->axis_direction( $axis ) );
+
+		return round(
+			$inverted
+				? $extent['start'] + $extent['length'] - $fraction * $extent['length']
+				: $extent['start'] + $fraction * $extent['length'],
+			self::PRECISION
+		);
 	}
 
 	/**
@@ -1006,7 +1169,14 @@ class KDNA_Charts_Scale {
 	 * @return array array( x, y )
 	 */
 	public function point( $x, $y, $clamp = false ) {
-		return array( $this->x( $x, $clamp ), $this->y( $y, $clamp ) );
+		$px = $this->x( $x, $clamp );
+		$py = $this->y( $y, $clamp );
+
+		// On a bar chart the x axis runs down the screen and the y axis
+		// runs across it, so the pair comes back the other way round.
+		return $this->is_horizontal()
+			? array( $py, $px )
+			: array( $px, $py );
 	}
 
 	/**
@@ -1044,35 +1214,48 @@ class KDNA_Charts_Scale {
 	 * Needed by the annotation layer when it nudges a label and has to
 	 * know what the nudged position means.
 	 */
-	public function invert_x( $svg_x ) {
-		if ( 0.0 === (float) $this->plot['width'] ) {
-			return $this->x_domain['min'];
-		}
-		$fraction = ( (float) $svg_x - $this->plot['x'] ) / $this->plot['width'];
-		return $this->x_domain['min'] + $fraction * ( $this->x_domain['max'] - $this->x_domain['min'] );
+	public function invert_x( $coordinate ) {
+		return $this->unmap( 'x', $coordinate );
 	}
 
-	public function invert_y( $svg_y ) {
-		if ( 0.0 === (float) $this->plot['height'] ) {
-			return $this->y_domain['min'];
+	public function invert_y( $coordinate ) {
+		return $this->unmap( 'y', $coordinate );
+	}
+
+	private function unmap( $axis, $coordinate ) {
+		$domain = ( 'x' === $axis ) ? $this->x_domain : $this->y_domain;
+		$extent = $this->axis_extent( $axis );
+
+		if ( 0.0 === (float) $extent['length'] ) {
+			return $domain['min'];
 		}
-		$fraction = ( $this->plot['bottom'] - (float) $svg_y ) / $this->plot['height'];
-		return $this->y_domain['min'] + $fraction * ( $this->y_domain['max'] - $this->y_domain['min'] );
+
+		$inverted = ( 'y' === $axis ) && ( 'down' === $this->axis_direction( $axis ) );
+		$fraction = $inverted
+			? ( $extent['start'] + $extent['length'] - (float) $coordinate ) / $extent['length']
+			: ( (float) $coordinate - $extent['start'] ) / $extent['length'];
+
+		return $domain['min'] + $fraction * ( $domain['max'] - $domain['min'] );
 	}
 
 	/**
 	 * The slot one bar occupies, for bar and column charts.
 	 *
-	 * Categories divide the plot into equal slots. Each slot holds a
-	 * group, each group holds one bar per series. Both gaps are
+	 * Categories divide the category axis into equal slots. Each slot
+	 * holds a group, each group holds one bar per series. Both gaps are
 	 * fractions of what they sit inside, so the arithmetic holds at any
 	 * category count.
 	 *
-	 * @param int $index        Which category.
-	 * @param int $series_index Which series within the group.
-	 * @param int $series_count How many series share the group.
-	 * @param array $options    Optional bar_gap and group_gap overrides.
-	 * @return array Keys x, width, slot_x, slot_width, centre.
+	 * Everything here is measured along the category axis rather than
+	 * along x, because on a bar chart that axis runs down the screen.
+	 * The caller turns start and thickness into a rectangle knowing
+	 * which way round its chart is.
+	 *
+	 * @param int   $index        Which category.
+	 * @param int   $series_index Which series within the group.
+	 * @param int   $series_count How many series share the group.
+	 * @param array $options      Optional bar_gap and group_gap overrides.
+	 * @return array Keys start, thickness, slot_start, slot_thickness, centre.
 	 */
 	public function band( $index, $series_index = 0, $series_count = 1, array $options = array() ) {
 		$count        = max( 1, count( $this->categories ) );
@@ -1086,22 +1269,31 @@ class KDNA_Charts_Scale {
 		$group_gap = max( 0.0, min( 0.9, $group_gap ) );
 		$bar_gap   = max( 0.0, min( 0.9, $bar_gap ) );
 
-		$slot_width  = $this->plot['width'] / $count;
-		$slot_x      = $this->plot['x'] + $index * $slot_width;
-		$group_width = $slot_width * ( 1 - $group_gap );
-		$group_x     = $slot_x + ( $slot_width - $group_width ) / 2;
+		$extent    = $this->axis_extent( 'x' );
+		$slot      = $extent['length'] / $count;
+		$slot_start = $extent['start'] + $index * $slot;
 
-		$share = $group_width / $series_count;
-		$width = $share * ( 1 - $bar_gap );
-		$x     = $group_x + $series_index * $share + ( $share - $width ) / 2;
+		$group     = $slot * ( 1 - $group_gap );
+		$group_start = $slot_start + ( $slot - $group ) / 2;
+
+		$share     = $group / $series_count;
+		$thickness = $share * ( 1 - $bar_gap );
+		$start     = $group_start + $series_index * $share + ( $share - $thickness ) / 2;
 
 		return array(
-			'x'          => round( $x, self::PRECISION ),
-			'width'      => round( $width, self::PRECISION ),
-			'slot_x'     => round( $slot_x, self::PRECISION ),
-			'slot_width' => round( $slot_width, self::PRECISION ),
-			'centre'     => round( $slot_x + $slot_width / 2, self::PRECISION ),
+			'start'          => round( $start, self::PRECISION ),
+			'thickness'      => round( $thickness, self::PRECISION ),
+			'slot_start'     => round( $slot_start, self::PRECISION ),
+			'slot_thickness' => round( $slot, self::PRECISION ),
+			'centre'         => round( $slot_start + $slot / 2, self::PRECISION ),
 		);
+	}
+
+	/**
+	 * Where a bar is measured from, on screen, along the value axis.
+	 */
+	public function baseline_position() {
+		return $this->y( $this->baseline );
 	}
 
 	/*

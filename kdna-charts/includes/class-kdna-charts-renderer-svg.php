@@ -44,8 +44,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 
-	/** Types this engine can draw today. Stages 6 and 7 add the rest. */
-	const DRAWABLE_TYPES = array( 'line', 'area' );
+	/** Types this engine can draw today. Stage 7 adds pie, donut and stat. */
+	const DRAWABLE_TYPES = array( 'line', 'area', 'bar', 'column' );
+
+	/** Gap between a bar's end and a value label sitting beyond it. */
+	const VALUE_LABEL_GAP = 12;
+
+	/** How far inside a bar's end an inside label sits. */
+	const VALUE_LABEL_INSET = 14;
+
+	/** How many series tones the stylesheet ships before they repeat. */
+	const PALETTE_SIZE = 6;
+
+	/**
+	 * The first tone in the ramp light enough that a reversed label
+	 * would disappear on it. Matches where the shipped ramp turns pale.
+	 */
+	const PALETTE_PALE_FROM = 4;
 
 	/*
 	 * The gaps between the plot and its labels are not declared here.
@@ -202,41 +217,16 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	 * solid rule on the tick it belongs at.
 	 */
 	protected function render_gridlines() {
-		$plot  = $this->scale->plot_area();
 		$lines = array();
 
-		foreach ( $this->scale->y_ticks() as $tick ) {
-			$rule = (string) ( $tick['rule'] ?? 'none' );
-			if ( 'none' === $rule ) {
-				continue;
+		foreach ( array( 'x', 'y' ) as $axis ) {
+			$ticks = ( 'x' === $axis ) ? $this->scale->x_ticks() : $this->scale->y_ticks();
+			foreach ( $ticks as $tick ) {
+				$line = $this->gridline( $axis, $tick );
+				if ( '' !== $line ) {
+					$lines[] = $line;
+				}
 			}
-			$lines[] = self::tag(
-				'line',
-				array(
-					'class' => self::css( 'gridline', array( 'horizontal', $rule, $tick['emphasis'] ?? 'normal' ) ),
-					'x1'    => $plot['x'],
-					'y1'    => $tick['position'],
-					'x2'    => $plot['right'],
-					'y2'    => $tick['position'],
-				)
-			);
-		}
-
-		foreach ( $this->scale->x_ticks() as $tick ) {
-			$rule = (string) ( $tick['rule'] ?? 'none' );
-			if ( 'none' === $rule ) {
-				continue;
-			}
-			$lines[] = self::tag(
-				'line',
-				array(
-					'class' => self::css( 'gridline', array( 'vertical', $rule, $tick['emphasis'] ?? 'normal' ) ),
-					'x1'    => $tick['position'],
-					'y1'    => $plot['y'],
-					'x2'    => $tick['position'],
-					'y2'    => $plot['bottom'],
-				)
-			);
 		}
 
 		if ( empty( $lines ) ) {
@@ -254,6 +244,37 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	}
 
 	/**
+	 * One gridline, drawn perpendicular to the axis that asked for it.
+	 *
+	 * That one rule is all the orientation handling this needs. On a
+	 * column chart the value axis runs down, so its rules run across;
+	 * turn the chart on its side and the same rules run down, without a
+	 * word about bars or columns appearing here.
+	 */
+	protected function gridline( $axis, array $tick ) {
+		$rule = (string) ( $tick['rule'] ?? 'none' );
+		if ( 'none' === $rule ) {
+			return '';
+		}
+
+		$plot      = $this->scale->plot_area();
+		$at        = $tick['position'];
+		$across    = 'across' === $this->scale->axis_direction( $axis );
+		$modifiers = array( $across ? 'vertical' : 'horizontal', $rule, $tick['emphasis'] ?? 'normal' );
+
+		return self::tag(
+			'line',
+			array(
+				'class' => self::css( 'gridline', $modifiers ),
+				'x1'    => $across ? $at : $plot['x'],
+				'y1'    => $across ? $plot['y'] : $at,
+				'x2'    => $across ? $at : $plot['right'],
+				'y2'    => $across ? $plot['bottom'] : $at,
+			)
+		);
+	}
+
+	/**
 	 * The data.
 	 *
 	 * Each series contributes at most one area path and one stroked
@@ -263,6 +284,28 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	 * join, while each segment keeps its own line character.
 	 */
 	protected function render_series() {
+		$marks = in_array( $this->type(), array( 'bar', 'column' ), true )
+			? $this->render_bars()
+			: $this->render_lines();
+
+		if ( '' === $marks ) {
+			return '';
+		}
+
+		return self::tag(
+			'g',
+			array(
+				'class'       => self::css( 'plot' ),
+				'aria-hidden' => 'true',
+			),
+			$marks
+		);
+	}
+
+	/**
+	 * Line and area charts.
+	 */
+	protected function render_lines() {
 		$groups = array();
 		$curve  = (string) $this->option( 'curve', 'linear' );
 		$fill   = $this->area_fill_enabled();
@@ -306,18 +349,7 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			);
 		}
 
-		if ( empty( $groups ) ) {
-			return '';
-		}
-
-		return self::tag(
-			'g',
-			array(
-				'class'       => self::css( 'plot' ),
-				'aria-hidden' => 'true',
-			),
-			implode( '', $groups )
-		);
+		return implode( '', $groups );
 	}
 
 	protected function render_series_area( array $series, $curve ) {
@@ -377,6 +409,403 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		);
 	}
 
+
+	/*
+	 * ====================================================================
+	 * Bar and column
+	 * ====================================================================
+	 *
+	 * One body of code draws both. The scale settles which screen
+	 * direction each axis runs along, and everything here is written in
+	 * terms of the category axis and the value axis rather than of x
+	 * and y. Turning a chart on its side then costs nothing, and the
+	 * two orientations cannot drift apart, because there is only one of
+	 * them.
+	 */
+
+	protected function render_bars() {
+		$categories = $this->scale->categories();
+		if ( empty( $categories ) ) {
+			return '';
+		}
+
+		$series = $this->bar_series();
+		if ( empty( $series ) ) {
+			return '';
+		}
+
+		$stacked = $this->scale->is_stacked();
+		$count   = count( $series );
+		$groups  = array();
+		$labels  = array();
+
+		/*
+		 * Running totals, one pair per category. Positives stack away
+		 * from the baseline one way and negatives the other, so each
+		 * category needs both and they never meet.
+		 */
+		$stack_up   = array_fill( 0, count( $categories ), 0.0 );
+		$stack_down = array_fill( 0, count( $categories ), 0.0 );
+
+		foreach ( $series as $position => $entry ) {
+			$bars = array();
+			$data = array_values( $entry['data'] );
+
+			foreach ( $categories as $index => $category ) {
+				$datum = isset( $data[ $index ] ) && is_array( $data[ $index ] ) ? $data[ $index ] : null;
+				if ( null === $datum || ! isset( $datum['value'] ) || ! is_numeric( $datum['value'] ) ) {
+					continue;
+				}
+
+				$value = (float) $datum['value'];
+
+				if ( $stacked ) {
+					$running = ( $value >= 0 ) ? $stack_up[ $index ] : $stack_down[ $index ];
+					$from    = $running;
+					$to      = $running + $value;
+					if ( $value >= 0 ) {
+						$stack_up[ $index ] = $to;
+					} else {
+						$stack_down[ $index ] = $to;
+					}
+					$band = $this->scale->band( $index, 0, 1 );
+					// The last series to stack in this direction is the
+					// one whose end is exposed, so it takes the rounding.
+					$outermost = $this->is_outermost_in_stack( $series, $position, $index, $value );
+				} else {
+					$from      = $this->scale->baseline();
+					$to        = $value;
+					$band      = $this->scale->band( $index, $position, $count );
+					$outermost = true;
+				}
+
+				$rect = $this->bar_rect( $band, $from, $to );
+				if ( $rect['width'] <= 0 || $rect['height'] <= 0 ) {
+					continue;
+				}
+
+				/*
+				 * Emphasis is only put on a bar when the definition asked
+				 * for it. An always present modifier would be a modifier
+				 * that always wins, and the series palette below would
+				 * never get a look in.
+				 *
+				 * This is the absent means inherit rule the whole plugin
+				 * runs on, applied one level down.
+				 */
+				$emphasis = $this->declared_emphasis( $datum );
+				if ( '' === $emphasis ) {
+					$emphasis = $this->declared_emphasis( $entry );
+				}
+
+				$modifiers = array( $emphasis, $value < 0 ? 'negative' : 'positive' );
+
+				/*
+				 * A chart with one series says what it means through
+				 * emphasis. A chart with several has to tell them apart
+				 * first, so each takes a tone of its own, and emphasis
+				 * still overrides it wherever a definition asks.
+				 */
+				if ( $count > 1 ) {
+					$modifiers[] = 'series-' . ( ( $position % self::PALETTE_SIZE ) + 1 );
+				}
+
+				$bars[] = self::tag(
+					'path',
+					array(
+						'class'         => self::css( 'bar', $modifiers ),
+						'd'             => $this->bar_path( $rect, $outermost ? $this->corner_radius() : 0, $value >= 0 ),
+						'data-category' => (string) $index,
+					)
+				);
+
+				$label = $this->value_label( $datum, $rect, $value, $stacked, $count > 1 ? $position : -1 );
+				if ( '' !== $label ) {
+					$labels[] = $label;
+				}
+			}
+
+			if ( empty( $bars ) ) {
+				continue;
+			}
+
+			$id = trim( (string) ( $entry['id'] ?? '' ) );
+
+			$groups[] = self::tag(
+				'g',
+				array(
+					'class'          => self::css( 'series', array( $this->emphasis_of( $entry ) ) ),
+					'data-series-id' => '' !== $id ? $id : null,
+					'data-series'    => (string) $position,
+				),
+				implode( '', $bars )
+			);
+		}
+
+		if ( empty( $groups ) ) {
+			return '';
+		}
+
+		/*
+		 * Value labels are collected and emitted after every bar, so a
+		 * label never disappears behind a bar drawn later. Inside labels
+		 * on a stacked chart would otherwise vanish under the segment
+		 * above them.
+		 */
+		return implode( '', $groups )
+			. ( empty( $labels )
+				? ''
+				: self::tag( 'g', array( 'class' => self::css( 'value-labels' ) ), implode( '', $labels ) ) );
+	}
+
+	/**
+	 * Series that actually carry categorical data, in order.
+	 */
+	protected function bar_series() {
+		$out = array();
+		foreach ( $this->series() as $entry ) {
+			if ( is_array( $entry ) && ! empty( $entry['data'] ) && is_array( $entry['data'] ) ) {
+				$out[] = $entry;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * True when no later series adds to this category's stack in the
+	 * same direction, which makes this segment the exposed end.
+	 */
+	protected function is_outermost_in_stack( array $series, $position, $index, $value ) {
+		$count = count( $series );
+		for ( $i = $position + 1; $i < $count; $i++ ) {
+			$data = array_values( $series[ $i ]['data'] );
+			if ( ! isset( $data[ $index ] ) || ! is_array( $data[ $index ] ) ) {
+				continue;
+			}
+			if ( ! isset( $data[ $index ]['value'] ) || ! is_numeric( $data[ $index ]['value'] ) ) {
+				continue;
+			}
+			$later = (float) $data[ $index ]['value'];
+			if ( 0.0 === $later ) {
+				continue;
+			}
+			if ( ( $later >= 0 ) === ( $value >= 0 ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Turns a band and a pair of values into a screen rectangle.
+	 *
+	 * The band gives the thickness of the bar and where it sits across
+	 * the category axis; the two values give the ends along the value
+	 * axis. Which of those is a width and which is a height is the only
+	 * thing the orientation decides.
+	 *
+	 * @return array Keys x, y, width, height, far, near, thickness.
+	 */
+	protected function bar_rect( array $band, $from, $to ) {
+		$near = $this->scale->position( 'y', $from );
+		$far  = $this->scale->position( 'y', $to );
+
+		$start  = min( $near, $far );
+		$length = abs( $far - $near );
+
+		if ( $this->scale->is_horizontal() ) {
+			return array(
+				'x'         => $start,
+				'y'         => $band['start'],
+				'width'     => $length,
+				'height'    => $band['thickness'],
+				'near'      => $near,
+				'far'       => $far,
+				'thickness' => $band['thickness'],
+			);
+		}
+
+		return array(
+			'x'         => $band['start'],
+			'y'         => $start,
+			'width'     => $band['thickness'],
+			'height'    => $length,
+			'near'      => $near,
+			'far'       => $far,
+			'thickness' => $band['thickness'],
+		);
+	}
+
+	/**
+	 * The path for one bar, with the far end optionally rounded.
+	 *
+	 * Only the exposed end is rounded. Rounding the end that sits on
+	 * the baseline would lift the bar off it, and rounding the join
+	 * between two stacked segments would leave a notch, so the corners
+	 * that meet something else stay square.
+	 *
+	 * @param array $rect     From bar_rect().
+	 * @param float $radius   Requested corner radius.
+	 * @param bool  $positive Whether the value grows away from the baseline.
+	 */
+	protected function bar_path( array $rect, $radius, $positive ) {
+		$x = $rect['x'];
+		$y = $rect['y'];
+		$w = $rect['width'];
+		$h = $rect['height'];
+
+		// A radius larger than the bar is a radius the bar cannot hold.
+		$radius = max( 0.0, min( (float) $radius, $rect['thickness'] / 2, ( $this->scale->is_horizontal() ? $w : $h ) ) );
+
+		if ( $radius <= 0 ) {
+			return 'M ' . $this->xy( $x, $y )
+				. ' h ' . KDNA_Charts_Scale::round_coord( $w )
+				. ' v ' . KDNA_Charts_Scale::round_coord( $h )
+				. ' h ' . KDNA_Charts_Scale::round_coord( -$w )
+				. ' Z';
+		}
+
+		$r = $radius;
+
+		if ( $this->scale->is_horizontal() ) {
+			if ( $positive ) {
+				// Rounded on the right.
+				return 'M ' . $this->xy( $x, $y )
+					. ' H ' . KDNA_Charts_Scale::round_coord( $x + $w - $r )
+					. ' A ' . $this->xy( $r, $r ) . ' 0 0 1 ' . $this->xy( $x + $w, $y + $r )
+					. ' V ' . KDNA_Charts_Scale::round_coord( $y + $h - $r )
+					. ' A ' . $this->xy( $r, $r ) . ' 0 0 1 ' . $this->xy( $x + $w - $r, $y + $h )
+					. ' H ' . KDNA_Charts_Scale::round_coord( $x )
+					. ' Z';
+			}
+			// Rounded on the left.
+			return 'M ' . $this->xy( $x + $w, $y )
+				. ' H ' . KDNA_Charts_Scale::round_coord( $x + $r )
+				. ' A ' . $this->xy( $r, $r ) . ' 0 0 0 ' . $this->xy( $x, $y + $r )
+				. ' V ' . KDNA_Charts_Scale::round_coord( $y + $h - $r )
+				. ' A ' . $this->xy( $r, $r ) . ' 0 0 0 ' . $this->xy( $x + $r, $y + $h )
+				. ' H ' . KDNA_Charts_Scale::round_coord( $x + $w )
+				. ' Z';
+		}
+
+		if ( $positive ) {
+			// Rounded on the top.
+			return 'M ' . $this->xy( $x, $y + $h )
+				. ' V ' . KDNA_Charts_Scale::round_coord( $y + $r )
+				. ' A ' . $this->xy( $r, $r ) . ' 0 0 1 ' . $this->xy( $x + $r, $y )
+				. ' H ' . KDNA_Charts_Scale::round_coord( $x + $w - $r )
+				. ' A ' . $this->xy( $r, $r ) . ' 0 0 1 ' . $this->xy( $x + $w, $y + $r )
+				. ' V ' . KDNA_Charts_Scale::round_coord( $y + $h )
+				. ' Z';
+		}
+
+		// Rounded on the bottom.
+		return 'M ' . $this->xy( $x, $y )
+			. ' V ' . KDNA_Charts_Scale::round_coord( $y + $h - $r )
+			. ' A ' . $this->xy( $r, $r ) . ' 0 0 0 ' . $this->xy( $x + $r, $y + $h )
+			. ' H ' . KDNA_Charts_Scale::round_coord( $x + $w - $r )
+			. ' A ' . $this->xy( $r, $r ) . ' 0 0 0 ' . $this->xy( $x + $w, $y + $h - $r )
+			. ' V ' . KDNA_Charts_Scale::round_coord( $y )
+			. ' Z';
+	}
+
+	/**
+	 * The figure printed on or beside a bar.
+	 *
+	 * An inside label needs the bar to be long enough to hold it, and
+	 * PHP cannot measure text, so a bar shorter than a rough guess at
+	 * the label's length puts its figure outside instead. A number half
+	 * hanging off the end of its own bar is worse than one sitting
+	 * beyond it.
+	 */
+	protected function value_label( array $datum, array $rect, $value, $stacked, $series_position = -1 ) {
+		$mode = $this->one_of( $this->option( 'value_labels', 'none' ), KDNA_Charts_Schema::VALUE_LABELS, 'none' );
+		if ( 'none' === $mode ) {
+			return '';
+		}
+
+		$text = KDNA_Charts_Scale::format_number( $value )
+			. (string) ( $datum['suffix'] ?? '' );
+		if ( '' === trim( $text ) ) {
+			return '';
+		}
+
+		$horizontal = $this->scale->is_horizontal();
+		$length     = $horizontal ? $rect['width'] : $rect['height'];
+		$positive   = $value >= 0;
+
+		$needed = mb_strlen( $text ) * 0.62 * KDNA_Charts_Scale::ASSUMED_LABEL_SIZE;
+		$inside = ( 'inside' === $mode ) && ( $length > $needed + self::VALUE_LABEL_INSET * 2 );
+
+		if ( $horizontal ) {
+			$x = $inside
+				? ( $positive ? $rect['far'] - self::VALUE_LABEL_INSET : $rect['far'] + self::VALUE_LABEL_INSET )
+				: ( $positive ? $rect['far'] + self::VALUE_LABEL_GAP : $rect['far'] - self::VALUE_LABEL_GAP );
+			$y        = $rect['y'] + $rect['height'] / 2;
+			$anchor   = $positive ? ( $inside ? 'end' : 'start' ) : ( $inside ? 'start' : 'end' );
+			$baseline = 'central';
+		} else {
+			$x = $rect['x'] + $rect['width'] / 2;
+			$y = $inside
+				? ( $positive ? $rect['far'] + self::VALUE_LABEL_INSET : $rect['far'] - self::VALUE_LABEL_INSET )
+				: ( $positive ? $rect['far'] - self::VALUE_LABEL_GAP : $rect['far'] + self::VALUE_LABEL_GAP );
+			$anchor   = 'middle';
+			$baseline = $inside
+				? ( $positive ? 'hanging' : 'text-after-edge' )
+				: ( $positive ? 'text-after-edge' : 'hanging' );
+		}
+
+		$modifiers = array( $inside ? 'inside' : 'above', $stacked ? 'stacked' : 'grouped' );
+
+		/*
+		 * A figure printed inside a bar is drawn in the reversed colour,
+		 * which only works while the bar is dark. The lighter half of
+		 * the series ramp is told so here rather than guessed at in CSS,
+		 * because only the renderer knows which tone a bar took.
+		 */
+		if ( $inside && $series_position >= 0 && ( ( $series_position % self::PALETTE_SIZE ) + 1 ) >= self::PALETTE_PALE_FROM ) {
+			$modifiers[] = 'pale';
+		}
+
+		return self::tag(
+			'text',
+			array(
+				'class'             => self::css( 'value-label', $modifiers ),
+				'x'                 => $x,
+				'y'                 => $y,
+				'text-anchor'       => $anchor,
+				'dominant-baseline' => $baseline,
+			),
+			esc_html( $text )
+		);
+	}
+
+	/**
+	 * The emphasis a definition actually stated, or '' when it said
+	 * nothing. Unlike emphasis_of(), this never invents one.
+	 */
+	protected function declared_emphasis( $thing ) {
+		if ( ! is_array( $thing ) || ! isset( $thing['emphasis'] ) ) {
+			return '';
+		}
+		$emphasis = strtolower( trim( (string) $thing['emphasis'] ) );
+		return in_array( $emphasis, KDNA_Charts_Schema::EMPHASIS, true ) ? $emphasis : '';
+	}
+
+	protected function corner_radius() {
+		$radius = $this->option( 'corner_radius', 0 );
+		return is_numeric( $radius ) ? max( 0.0, (float) $radius ) : 0.0;
+	}
+
+	protected function one_of( $value, array $allowed, $fallback ) {
+		$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
+		return in_array( $value, $allowed, true ) ? $value : $fallback;
+	}
+
+	protected function xy( $x, $y ) {
+		return KDNA_Charts_Scale::round_coord( $x ) . ' ' . KDNA_Charts_Scale::round_coord( $y );
+	}
+
 	/*
 	 * ====================================================================
 	 * Axes
@@ -391,43 +820,16 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	 * picks a custom property, and the property picks the colour.
 	 */
 	protected function render_axis_labels() {
-		$plot   = $this->scale->plot_area();
 		$labels = array();
 
-		foreach ( $this->scale->y_ticks() as $tick ) {
-			$label = (string) ( $tick['label'] ?? '' );
-			if ( '' === $label ) {
-				continue;
+		foreach ( array( 'x', 'y' ) as $axis ) {
+			$ticks = ( 'x' === $axis ) ? $this->scale->x_ticks() : $this->scale->y_ticks();
+			foreach ( $ticks as $tick ) {
+				$label = $this->axis_label( $axis, $tick );
+				if ( '' !== $label ) {
+					$labels[] = $label;
+				}
 			}
-			$labels[] = self::tag(
-				'text',
-				array(
-					'class'             => self::css( 'axis-label', array( 'y', $tick['emphasis'] ?? 'normal' ) ),
-					'x'                 => $plot['x'] - KDNA_Charts_Scale::TICK_LABEL_GAP_X,
-					'y'                 => $tick['position'],
-					'text-anchor'       => 'end',
-					'dominant-baseline' => 'central',
-				),
-				esc_html( $label )
-			);
-		}
-
-		foreach ( $this->scale->x_ticks() as $tick ) {
-			$label = (string) ( $tick['label'] ?? '' );
-			if ( '' === $label ) {
-				continue;
-			}
-			$labels[] = self::tag(
-				'text',
-				array(
-					'class'             => self::css( 'axis-label', array( 'x', $tick['emphasis'] ?? 'normal' ) ),
-					'x'                 => $tick['position'],
-					'y'                 => $plot['bottom'] + KDNA_Charts_Scale::TICK_LABEL_GAP_Y,
-					'text-anchor'       => 'middle',
-					'dominant-baseline' => 'hanging',
-				),
-				esc_html( $label )
-			);
 		}
 
 		if ( empty( $labels ) ) {
@@ -441,6 +843,33 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 				'aria-hidden' => 'true',
 			),
 			implode( '', $labels )
+		);
+	}
+
+	/**
+	 * One tick label. An axis running across the plot is labelled
+	 * beneath it, and one running down the plot is labelled to its left,
+	 * which is true of both orientations without either being named.
+	 */
+	protected function axis_label( $axis, array $tick ) {
+		$label = (string) ( $tick['label'] ?? '' );
+		if ( '' === $label ) {
+			return '';
+		}
+
+		$plot   = $this->scale->plot_area();
+		$across = 'across' === $this->scale->axis_direction( $axis );
+
+		return self::tag(
+			'text',
+			array(
+				'class'             => self::css( 'axis-label', array( $axis, $tick['emphasis'] ?? 'normal' ) ),
+				'x'                 => $across ? $tick['position'] : $plot['x'] - KDNA_Charts_Scale::TICK_LABEL_GAP_X,
+				'y'                 => $across ? $plot['bottom'] + KDNA_Charts_Scale::TICK_LABEL_GAP_Y : $tick['position'],
+				'text-anchor'       => $across ? 'middle' : 'end',
+				'dominant-baseline' => $across ? 'hanging' : 'central',
+			),
+			esc_html( $label )
 		);
 	}
 
@@ -460,22 +889,26 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		$inset  = KDNA_Charts_Scale::EDGE_INSET;
 		$titles = array();
 
-		$x_title = trim( (string) ( $this->definition['axes']['x']['label'] ?? '' ) );
-		if ( '' !== $x_title ) {
-			$titles[] = self::tag(
-				'text',
-				array(
-					'class'       => self::css( 'axis-title', array( 'x' ) ),
-					'x'           => $plot['x'] + $plot['width'] / 2,
-					'y'           => $canvas['height'] - $inset,
-					'text-anchor' => 'middle',
-				),
-				esc_html( $x_title )
-			);
-		}
+		foreach ( array( 'x', 'y' ) as $axis ) {
+			$title = trim( (string) ( $this->definition['axes'][ $axis ]['label'] ?? '' ) );
+			if ( '' === $title ) {
+				continue;
+			}
 
-		$y_title = trim( (string) ( $this->definition['axes']['y']['label'] ?? '' ) );
-		if ( '' !== $y_title ) {
+			if ( 'across' === $this->scale->axis_direction( $axis ) ) {
+				$titles[] = self::tag(
+					'text',
+					array(
+						'class'       => self::css( 'axis-title', array( $axis, 'across' ) ),
+						'x'           => $plot['x'] + $plot['width'] / 2,
+						'y'           => $canvas['height'] - $inset,
+						'text-anchor' => 'middle',
+					),
+					esc_html( $title )
+				);
+				continue;
+			}
+
 			/*
 			 * Rotated a quarter turn anticlockwise about a point on the
 			 * left edge, so it reads bottom to top with its middle level
@@ -483,23 +916,20 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			 * glyphs on the inward side of that point, which after the
 			 * rotation means to the right of the edge rather than off
 			 * the canvas.
-			 *
-			 * The rotation is geometry, so it belongs here. How the text
-			 * looks once rotated is still entirely CSS.
 			 */
 			$x = $inset;
 			$y = $plot['y'] + $plot['height'] / 2;
 			$titles[] = self::tag(
 				'text',
 				array(
-					'class'             => self::css( 'axis-title', array( 'y' ) ),
+					'class'             => self::css( 'axis-title', array( $axis, 'down' ) ),
 					'x'                 => $x,
 					'y'                 => $y,
 					'text-anchor'       => 'middle',
 					'dominant-baseline' => 'hanging',
 					'transform'         => 'rotate(-90 ' . KDNA_Charts_Scale::round_coord( $x ) . ' ' . KDNA_Charts_Scale::round_coord( $y ) . ')',
 				),
-				esc_html( $y_title )
+				esc_html( $title )
 			);
 		}
 

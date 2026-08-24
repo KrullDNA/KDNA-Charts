@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 5 of 13, annotation layer
+- **Build stage:** 6 of 13, SVG renderer, bar and column
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -35,6 +35,7 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | Preview meta box on the chart edit screen | 4 | Temporary, replaced at Stage 8 |
 | Annotation layer: markers, points, callouts, leaders, notes | 5 | Done |
 | Label collision avoidance | 5 | Done |
+| SVG renderer, bar and column, grouped and stacked | 6 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -324,6 +325,52 @@ figures and the notes, not just the shape of the line. Without it a
 screen reader hears that a line fell from 108 to 52 and never learns
 that thirty per cent of it went in the first five years.
 
+## Bar and column
+
+One body of code draws both. The scale settles which screen direction
+each axis runs along, and the renderer is written in terms of the
+category axis and the value axis rather than of x and y. Turning a
+chart on its side then costs nothing, and the two orientations cannot
+drift apart, because there is only one of them.
+
+**The axes keep their names whichever way the bars point.** `x` is
+always the category axis and `y` always the value axis. That is what
+lets a chart switch between bar and column without its definition being
+rewritten, and it is the same reasoning that keeps annotations stored
+when a type cannot draw them.
+
+**One rule settles almost everything else:** a gridline, or a marker,
+is drawn perpendicular to the axis it belongs to. Value gridlines on a
+column chart run across; on a bar chart the same gridlines run down.
+Neither the gridline code nor the marker code mentions bars or columns.
+A `horizontal` marker at `y: 40` draws across a column chart and down a
+bar chart, and in both cases it sits at the value 40.
+
+### Details worth knowing
+
+- **Stacked charts are measured by their totals.** An axis inferred
+  from the largest single value would run out partway up the tallest
+  stack. Positives and negatives total apart, because they stack in
+  opposite directions from the baseline.
+- **Only the exposed end of a bar is rounded.** Rounding the end on the
+  baseline would lift the bar off it, and rounding the join between two
+  stacked segments would leave a notch. On a stack, only the outermost
+  segment in each direction takes the radius.
+- **Emphasis is only put on a bar when the definition asks for it.** An
+  always present modifier would always win, and the series tones would
+  never get a look in. This is the absent means inherit rule applied
+  one level down.
+- **A chart with several series takes tones rather than emphasis.** One
+  series says what it means through emphasis; several have to be told
+  apart first. Explicit emphasis still overrides the tone.
+- **A bar too short to hold its figure puts it outside instead.** PHP
+  cannot measure text, so this is a guess, but a number half hanging
+  off the end of its own bar is worse than one sitting beyond it.
+- **Value labels are drawn after every bar**, so an inside label on a
+  stacked chart cannot vanish under the segment above it.
+- **Bars are obstacles for the annotation layer**, the way the line is
+  on a line chart, so a callout is never dropped on one.
+
 ## File structure so far
 
 ```
@@ -355,6 +402,29 @@ kdna-charts/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 6
+
+1. Import or build a column chart with categories and one series.
+   Confirm the bars sit on the baseline with the categories labelled
+   beneath and the values down the left.
+2. Change its type to `bar`. Everything should turn on its side with no
+   other edit: categories down the left, values along the bottom.
+3. Add two more series. Confirm they group side by side within each
+   category and take three distinct tones.
+4. Set `arrangement` to `stacked`. Confirm the segments abut exactly,
+   the axis grows to hold the totals, and only the top segment is
+   rounded.
+5. Set `value_labels` to `above`, then `inside`. Confirm inside figures
+   are reversed out, and that a very short bar puts its figure outside.
+6. Set `corner_radius`, `bar_gap` and `group_gap` and confirm each does
+   what it says.
+7. Add a negative value. Confirm the bar hangs the other way from zero
+   and is rounded on its own far end.
+8. Add a `horizontal` marker at a value. On a column chart it should
+   run across; switch to `bar` and the same marker should run down,
+   still at that value.
+9. Add a callout and a note and confirm neither lands on a bar.
 
 ## Testing Stage 5
 

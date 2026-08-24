@@ -118,6 +118,35 @@
 	--kdna-chart-source-align: left;
 	--kdna-chart-source-margin: 0.5rem 0 0;
 
+	/*
+	 * Series tones, for charts with more than one series.
+	 *
+	 * A ramp rather than a set of hues, because an editorial chart is
+	 * usually making one argument in one colour and the series are
+	 * degrees of the same thing. A site that needs distinct hues sets
+	 * these six and gets them.
+	 */
+	--kdna-chart-series-colour-1: #14332c;
+	--kdna-chart-series-colour-2: #3d5f55;
+	--kdna-chart-series-colour-3: #6b8b80;
+	--kdna-chart-series-colour-4: #9db3ab;
+	--kdna-chart-series-colour-5: #c3d2cc;
+	--kdna-chart-series-colour-6: #e2e9e6;
+
+	/* Bars and columns */
+	--kdna-chart-bar-colour-strong: #14332c;
+	--kdna-chart-bar-colour-normal: #4a5f58;
+	--kdna-chart-bar-colour-muted: #b6c2bd;
+	--kdna-chart-bar-opacity: 1;
+	--kdna-chart-bar-stroke-colour: transparent;
+	--kdna-chart-bar-stroke-width: 0;
+
+	/* Value labels printed on or beside a bar */
+	--kdna-chart-value-label-size: 20px;
+	--kdna-chart-value-label-weight: 600;
+	--kdna-chart-value-label-colour: #14332c;
+	--kdna-chart-value-label-colour-inside: #fff;
+
 	/* Markers */
 	--kdna-chart-marker-colour: #6b7a75;
 	--kdna-chart-marker-width: 2px;
@@ -373,6 +402,74 @@
 }
 
 /* ---------------------------------------------------------------------
+ * Bars and columns
+ *
+ * One set of rules for both, because the renderer draws both from one
+ * body of code and only the scale knows which way round the chart is.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__bar {
+	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
+	fill-opacity: var( --kdna-chart-bar-opacity, 1 );
+	stroke: var( --kdna-chart-bar-stroke-colour, transparent );
+	stroke-width: var( --kdna-chart-bar-stroke-width, 0 );
+}
+
+/*
+ * The series tones come first and the emphasis modifiers after them, so
+ * a definition that states an emphasis overrides the tone it would
+ * otherwise have taken. The renderer only emits an emphasis modifier
+ * when the definition asked for one, which is what makes that ordering
+ * mean anything.
+ */
+.kdna-chart__bar--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
+.kdna-chart__bar--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
+.kdna-chart__bar--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
+.kdna-chart__bar--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
+.kdna-chart__bar--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
+.kdna-chart__bar--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+
+.kdna-chart__bar--strong {
+	fill: var( --kdna-chart-bar-colour-strong, #14332c );
+}
+
+.kdna-chart__bar--normal {
+	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
+}
+
+.kdna-chart__bar--muted {
+	fill: var( --kdna-chart-bar-colour-muted, #b6c2bd );
+}
+
+
+
+.kdna-chart__value-label {
+	font-family: var( --kdna-chart-font-family, inherit );
+	font-size: var( --kdna-chart-value-label-size, 20px );
+	font-weight: var( --kdna-chart-value-label-weight, 600 );
+	fill: var( --kdna-chart-value-label-colour, #14332c );
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A figure printed on the bar itself has to read against the bar, not
+ * against the page, so it takes its own colour. The renderer only ever
+ * uses this class when the bar was long enough to hold the figure.
+ */
+.kdna-chart__value-label--inside {
+	fill: var( --kdna-chart-value-label-colour-inside, #fff );
+}
+
+/*
+ * Except on the pale half of the series ramp, where a reversed figure
+ * would disappear. The renderer marks those, since only it knows which
+ * tone a given bar took.
+ */
+.kdna-chart__value-label--pale {
+	fill: var( --kdna-chart-value-label-colour, #14332c );
+}
+
+/* ---------------------------------------------------------------------
  * The annotation layer
  *
  * The sizes here are not free. The annotation renderer reserves space
@@ -567,6 +664,11 @@
  *   .kdna-chart__callout-caption--{size}
  *   .kdna-chart__leader--{style}
  *   .kdna-chart__note--{align}
+ *   .kdna-chart__value-labels   all figures printed on or beside bars
+ *   .kdna-chart__bar--positive / --negative
+ *   .kdna-chart__bar--normal
+ *   .kdna-chart__value-label--stacked / --grouped
+ *   .kdna-chart__axis-title--across / --down
  *
  * Anything that actually paints is declared above. If a class appears
  * in the markup, is not on this list, and has no rule, that is a bug.
@@ -620,6 +722,7 @@
  */
 @container kdna-chart ( max-width: 640px ) {
 	.kdna-chart__frame {
+		--kdna-chart-value-label-size: 24px;
 		--kdna-chart-axis-label-size: 24px;
 		--kdna-chart-axis-title-size: 24px;
 		--kdna-chart-marker-label-size: 24px;
@@ -639,6 +742,7 @@
  */
 @container kdna-chart ( max-width: 420px ) {
 	.kdna-chart__frame {
+		--kdna-chart-value-label-size: 24px;
 		--kdna-chart-axis-label-size: 24px;
 		--kdna-chart-axis-title-size: 24px;
 		--kdna-chart-marker-label-size: 26px;
