@@ -1,0 +1,85 @@
+{
+  "kdna_chart": 1,
+  "title": "Skin collagen after menopause",
+  "type": "line",
+  "engine": "svg",
+  "options": {
+    "area_fill": true,
+    "curve": "smooth",
+    "aspect_ratio": "16:9"
+  },
+  "axes": {
+    "x": {
+      "label": "Years after menopause",
+      "min": -8,
+      "max": 20,
+      "ticks": [
+        { "value": 0,  "label": "Year 0", "emphasis": "strong" },
+        { "value": 5,  "label": "5",      "emphasis": "strong" },
+        { "value": 10, "label": "10",     "emphasis": "muted"  },
+        { "value": 15, "label": "15",     "emphasis": "muted"  },
+        { "value": 20, "label": "20",     "emphasis": "strong" }
+      ]
+    },
+    "y": {
+      "label": "Collagen remaining",
+      "min": 45,
+      "max": 108,
+      "baseline": 45,
+      "ticks": [
+        { "value": 100, "label": "100%", "emphasis": "strong", "rule": "solid"  },
+        { "value": 75,  "label": "75",   "emphasis": "muted",  "rule": "dotted" },
+        { "value": 50,  "label": "50",   "emphasis": "muted",  "rule": "dotted" }
+      ]
+    }
+  },
+  "series": [
+    {
+      "id": "collagen",
+      "label": "Skin collagen",
+      "segments": [
+        {
+          "style": "dotted",
+          "emphasis": "muted",
+          "points": [[-8, 108], [-4, 104], [0, 100]]
+        },
+        {
+          "style": "solid",
+          "emphasis": "strong",
+          "points": [[0, 100], [5, 70], [10, 64], [15, 58], [20, 52]]
+        }
+      ]
+    }
+  ],
+  "markers": [
+    { "type": "vertical", "x": 0, "label": "Menopause", "label_position": "top" }
+  ],
+  "points": [
+    { "x": 0,  "y": 100, "style": "hollow" },
+    { "x": 5,  "y": 70,  "style": "filled" },
+    { "x": 20, "y": 52,  "style": "hollow",
+      "label": "about 52% remaining", "label_position": "left" }
+  ],
+  "callouts": [
+    {
+      "value": "-30%",
+      "caption": "in the first five years",
+      "size": "large",
+      "anchor": { "from": { "x": 0, "y": 100 }, "to": { "x": 5, "y": 70 } },
+      "leader": "elbow"
+    },
+    {
+      "value": "-2% a year",
+      "caption": "for the next fifteen",
+      "size": "small",
+      "anchor": { "x": 12, "y": 62 },
+      "leader": "none"
+    }
+  ],
+  "notes": [
+    { "text": "slow, steady decline, roughly 1% a year",
+      "at": { "x": -6, "y": 111 } }
+  ],
+  "source": "Brincat et al., Obstetrics and Gynecology, 1987",
+  "style": {}
+}
