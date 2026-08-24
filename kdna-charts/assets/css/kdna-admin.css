@@ -171,3 +171,111 @@
 	margin-left: 6px;
 	font-size: 12px;
 }
+
+/* ---------------------------------------------------------------------
+ * Import screen
+ * ------------------------------------------------------------------ */
+
+.kdna-import__intro {
+	max-width: 78ch;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-import__panels {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 340px, 1fr ) );
+	gap: 24px;
+	margin: 24px 0;
+}
+
+.kdna-import__panel {
+	padding: 20px 24px 8px;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-import__panel h2 {
+	margin-top: 0;
+	font-size: 15px;
+}
+
+.kdna-import__textarea {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: pre;
+	overflow-wrap: normal;
+	overflow-x: auto;
+}
+
+.kdna-import__rule {
+	margin: 32px 0 24px;
+	border: 0;
+	border-top: 1px solid var( --kdna-admin-border );
+}
+
+.kdna-import__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 16px 0 24px;
+}
+
+/*
+ * The prompt has to be in the document for the copy fallback to select
+ * from, but it is never meant to be read here. Clipped rather than
+ * display none, because a hidden element cannot be selected.
+ */
+.kdna-import__hidden-source {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
+.kdna-import__reference {
+	max-width: 1000px;
+	padding: 12px 16px;
+	background: var( --kdna-admin-surface );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-import__reference summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.kdna-import__reference[open] summary {
+	margin-bottom: 12px;
+}
+
+.kdna-import__reference-text {
+	width: 100%;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	background: var( --kdna-admin-bg );
+	white-space: pre;
+	overflow-wrap: normal;
+	overflow-x: auto;
+}
+
+/* ---------------------------------------------------------------------
+ * Import summary notice
+ * ------------------------------------------------------------------ */
+
+.kdna-import-summary__list {
+	margin: 8px 0 8px 20px;
+	list-style: disc;
+}
+
+.kdna-import-summary__list li {
+	margin-bottom: 4px;
+}

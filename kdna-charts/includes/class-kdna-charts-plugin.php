@@ -10,14 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The schema loads first, because everything else asks it what a chart
+// is allowed to contain.
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-schema.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-cpt.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-data.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-import.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-admin.php';
 
 KDNA_Charts_CPT::init();
 
 if ( is_admin() ) {
 	KDNA_Charts_Admin::init();
+	KDNA_Charts_Import::init();
 }
 
 class KDNA_Charts_Plugin {

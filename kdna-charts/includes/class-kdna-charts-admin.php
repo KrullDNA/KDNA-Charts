@@ -320,7 +320,7 @@ class KDNA_Charts_Admin {
 		$create_action_url = admin_url( 'admin.php?action=kdna_charts_create' );
 		$nonce_field_name  = self::NONCE_CREATE;
 		$cancel_url        = self::get_list_url();
-		$types             = KDNA_Charts_CPT::VALID_TYPES;
+		$types             = KDNA_Charts_Schema::TYPES;
 
 		$template = KDNA_CHARTS_PATH . 'templates/admin-add-new-placeholder.php';
 		if ( ! file_exists( $template ) ) {
@@ -389,9 +389,49 @@ class KDNA_Charts_Admin {
 		 * and tiny: the real admin JS arrives with the Alpine editor at
 		 * Stage 8, and until then this is the only script the screen needs.
 		 */
-		wp_add_inline_script(
-			'common',
-			"(function(){document.addEventListener('click',function(e){var b=e.target.closest('.kdna-copy-shortcode');if(!b)return;e.preventDefault();var t=b.getAttribute('data-clipboard-text')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(err){}document.body.removeChild(ta);}var o=b.textContent;b.textContent=" . wp_json_encode( __( 'Copied', 'kdna-charts' ) ) . ";setTimeout(function(){b.textContent=o;},1500);});})();"
+		wp_add_inline_script( 'common', self::clipboard_script() );
+	}
+
+	/**
+	 * The clipboard helper shared by the Shortcode column and the Import
+	 * screen's copy buttons.
+	 *
+	 * Two sources of text, because the two jobs are different sizes. A
+	 * shortcode is short enough to sit in an attribute. The authoring
+	 * prompt is several thousand words, so its button names a textarea to
+	 * copy from instead.
+	 *
+	 * The execCommand branch is the fallback for any site still served
+	 * over plain HTTP, where the asynchronous clipboard API is unavailable.
+	 */
+	private static function clipboard_script() {
+		$copied = wp_json_encode( __( 'Copied', 'kdna-charts' ) );
+
+		return "(function(){"
+			. "function flash(b,msg){var o=b.textContent;b.textContent=msg;setTimeout(function(){b.textContent=o;},1500);}"
+			. "function write(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);return;}"
+			. "var ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';"
+			. "document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(err){}document.body.removeChild(ta);}"
+			. "document.addEventListener('click',function(e){"
+			. "var s=e.target.closest('.kdna-copy-shortcode');"
+			. "if(s){e.preventDefault();write(s.getAttribute('data-clipboard-text')||'');flash(s," . $copied . ");return;}"
+			. "var c=e.target.closest('.kdna-copy');"
+			. "if(!c)return;e.preventDefault();"
+			. "var src=document.getElementById(c.getAttribute('data-kdna-copy')||'');"
+			. "if(!src)return;write(src.value||src.textContent||'');"
+			. "flash(c,c.getAttribute('data-kdna-copied')||" . $copied . ");"
+			. "});})();";
+	}
+
+	/**
+	 * The plugin's own admin page slugs, the ones that are not the post
+	 * type's own screens. Each stage that adds a page adds it here, so
+	 * asset loading stays in one place.
+	 */
+	public static function plugin_pages() {
+		return array(
+			self::MENU_SLUG_ADD_NEW,
+			KDNA_Charts_Import::MENU_SLUG,
 		);
 	}
 
@@ -405,6 +445,6 @@ class KDNA_Charts_Admin {
 			return true;
 		}
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-		return in_array( $page, array( self::MENU_SLUG_ADD_NEW ), true );
+		return in_array( $page, self::plugin_pages(), true );
 	}
 }

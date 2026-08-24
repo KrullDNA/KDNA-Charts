@@ -46,13 +46,10 @@ class KDNA_Charts_CPT {
 
 	/**
 	 * Chart definition schema version. Matches the kdna_chart key in the
-	 * interchange JSON. Stage 2 takes ownership of what the number means,
-	 * this constant is simply the version the plugin writes.
+	 * interchange JSON. KDNA_Charts_Schema owns what the number means,
+	 * this constant is the version the storage layer writes.
 	 */
-	const SCHEMA_VERSION = 1;
-
-	const VALID_TYPES   = array( 'line', 'area', 'bar', 'column', 'pie', 'donut', 'stat' );
-	const VALID_ENGINES = array( 'svg', 'chartjs' );
+	const SCHEMA_VERSION = KDNA_Charts_Schema::VERSION;
 
 	/**
 	 * Structured meta parts, mapped to the definition key each one holds
@@ -214,7 +211,7 @@ class KDNA_Charts_CPT {
 	 */
 	public static function sanitize_type( $value ) {
 		$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
-		return in_array( $value, self::VALID_TYPES, true ) ? $value : '';
+		return KDNA_Charts_Schema::is_type( $value ) ? $value : '';
 	}
 
 	/**
@@ -226,7 +223,7 @@ class KDNA_Charts_CPT {
 		if ( 'chart.js' === $value || 'chart_js' === $value ) {
 			$value = 'chartjs';
 		}
-		return in_array( $value, self::VALID_ENGINES, true ) ? $value : '';
+		return KDNA_Charts_Schema::is_engine( $value ) ? $value : '';
 	}
 
 	/**
@@ -562,87 +559,15 @@ class KDNA_Charts_CPT {
 	 * The definition written into a freshly created chart, so a new entry
 	 * opens on something rather than nothing.
 	 *
-	 * Provisional shapes only. Stage 2 makes the schema class the single
-	 * source of truth and these defaults move to sit on top of it.
+	 * The shapes themselves live in the schema class, which is the single
+	 * source of truth for what a chart may contain. This stays here as
+	 * the storage layer's way of asking for one.
 	 *
-	 * @param string $type One of VALID_TYPES.
+	 * @param string $type One of the schema's chart types.
 	 * @return array
 	 */
 	public static function default_definition( $type ) {
-		$type = self::sanitize_type( $type );
-		if ( '' === $type ) {
-			$type = 'line';
-		}
-
-		$definition = array(
-			'kdna_chart' => self::SCHEMA_VERSION,
-			'type'       => $type,
-			// Empty means inherit the global default engine.
-			'engine'     => '',
-			'options'    => array(),
-			'axes'       => array(),
-			'series'     => array(),
-			'markers'    => array(),
-			'points'     => array(),
-			'callouts'   => array(),
-			'notes'      => array(),
-			'source'     => '',
-			'caption'    => '',
-			// Empty means inherit every value from the global styling page.
-			'style'      => array(),
-		);
-
-		if ( in_array( $type, array( 'pie', 'donut' ), true ) ) {
-			$definition['series'] = array(
-				array(
-					'id'   => 'segments',
-					'data' => array(
-						array( 'label' => __( 'First', 'kdna-charts' ),  'value' => 50 ),
-						array( 'label' => __( 'Second', 'kdna-charts' ), 'value' => 30 ),
-						array( 'label' => __( 'Third', 'kdna-charts' ),  'value' => 20 ),
-					),
-				),
-			);
-			return $definition;
-		}
-
-		if ( 'stat' === $type ) {
-			$definition['series'] = array(
-				array(
-					'id'   => 'stats',
-					'data' => array(
-						array( 'label' => __( 'First figure', 'kdna-charts' ),  'value' => 30, 'suffix' => '%' ),
-						array( 'label' => __( 'Second figure', 'kdna-charts' ), 'value' => 12, 'suffix' => '%' ),
-					),
-				),
-			);
-			return $definition;
-		}
-
-		// Plotted types: line, area, bar, column.
-		$definition['axes'] = array(
-			'x' => array( 'label' => '' ),
-			'y' => array( 'label' => '' ),
-		);
-		$definition['series'] = array(
-			array(
-				'id'       => 'series_1',
-				'label'    => __( 'Series 1', 'kdna-charts' ),
-				'segments' => array(
-					array(
-						'style'    => 'solid',
-						'emphasis' => 'strong',
-						'points'   => array( array( 0, 0 ), array( 1, 0 ) ),
-					),
-				),
-			),
-		);
-
-		if ( 'area' === $type ) {
-			$definition['options']['area_fill'] = true;
-		}
-
-		return $definition;
+		return KDNA_Charts_Schema::default_definition( self::sanitize_type( $type ) );
 	}
 
 	/*

@@ -182,19 +182,12 @@ class KDNA_Charts_Data {
 	}
 
 	/**
-	 * Human readable label for a chart type.
+	 * Human readable label for a chart type. The labels themselves live
+	 * in the schema, which is the single source of truth for the type
+	 * vocabulary.
 	 */
 	public static function type_label( $type ) {
-		$labels = array(
-			'line'   => __( 'Line', 'kdna-charts' ),
-			'area'   => __( 'Area', 'kdna-charts' ),
-			'bar'    => __( 'Bar', 'kdna-charts' ),
-			'column' => __( 'Column', 'kdna-charts' ),
-			'pie'    => __( 'Pie', 'kdna-charts' ),
-			'donut'  => __( 'Donut', 'kdna-charts' ),
-			'stat'   => __( 'Stat block', 'kdna-charts' ),
-		);
-		return isset( $labels[ $type ] ) ? $labels[ $type ] : '';
+		return KDNA_Charts_Schema::type_label( $type );
 	}
 
 	/**
