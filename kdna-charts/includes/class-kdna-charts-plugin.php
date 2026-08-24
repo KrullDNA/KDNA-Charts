@@ -15,10 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-schema.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-cpt.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-data.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-scale.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-import.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-admin.php';
 
 KDNA_Charts_CPT::init();
+KDNA_Charts_Scale_Debug::init();
 
 if ( is_admin() ) {
 	KDNA_Charts_Admin::init();

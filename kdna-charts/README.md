@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 2 of 13, schema and importer
+- **Build stage:** 3 of 13, scale and axis engine
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -29,6 +29,8 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | Validator, with a report of what it discarded, dropped and repaired | 2 | Done |
 | Import screen, file upload and paste | 2 | Done |
 | `docs/chart-schema.md`, printed on the import screen with a copy button | 2 | Done |
+| Scale engine: plot area, domains, ticks, path geometry | 3 | Done |
+| Diagnostic dump at `?kdna_debug=1` | 3 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
 
 ## Data model
@@ -136,6 +138,59 @@ read as one repair with a count of forty rather than forty sentences,
 and `series[0].colour` and `series[3].colour` collapse into one finding
 about `series[].colour`.
 
+## The scale engine
+
+`KDNA_Charts_Scale` is the maths every plotted chart type depends on.
+It emits nothing: no markup, no echo, no enqueue. Everything it returns
+is a number, a list of numbers or a path string, and the renderer
+decides what to do with it.
+
+The canvas is a fixed 1000 units wide, with the height following from
+the aspect ratio. The SVG carries a viewBox and width 100 per cent, so
+those units are proportions rather than pixels and a chart scales
+fluidly with no JavaScript at all. SVG counts its y axis downward and
+charts count upward, and that inversion lives in one method here rather
+than being remembered in twenty places.
+
+Three decisions worth knowing about.
+
+**Nothing is clamped by default.** A value outside the domain maps to a
+coordinate outside the plot area, in the padding. This is on purpose:
+the collagen chart's note sits at y 111 against a domain that stops at
+108, because the note belongs above the plot. Clamping would drop it
+onto the frame. Annotations are also kept out of domain inference, for
+the same reason: a note placed above the data would otherwise stretch
+the axis and flatten the line it is annotating.
+
+**Smoothing is not allowed to invent data.** A Catmull Rom spline
+passes through every point it is given, which is the property a chart
+needs. But it can bulge past them, and on a chart that is a lie: a
+gentle rise that suddenly steepens gets drawn dipping below its own
+starting value first. So where three consecutive points move in one
+direction, the control points are held inside the span they belong to.
+Genuine peaks still curve through their apex, because the clamp only
+applies where the data itself is monotone.
+
+**Padding adapts to the labels.** An axis with a title reserves room
+for it, an axis without one gets the space back, rather than every
+chart carrying a margin for text that may not be there.
+
+## The diagnostic dump
+
+Add `?kdna_debug=1` to any admin URL with a chart id, or to a chart's
+own edit screen URL, and the plugin prints the computed geometry
+instead of the page: canvas, padding, plot area, both domains and where
+each came from, every tick with its SVG position, and every data point
+beside the coordinate it maps to, with the path string built from it.
+
+- `wp-admin/admin.php?kdna_debug=1&chart=123`
+- `wp-admin/post.php?post=123&action=edit&kdna_debug=1`
+- add `&format=json` for the raw payload
+- with no chart id, it lists the library so one can be picked
+
+Administrators only. A chart definition is not secret, but a debug
+endpoint anybody can call on any post id is a fishing tool.
+
 ## File structure so far
 
 ```
@@ -147,6 +202,7 @@ kdna-charts/
 │   ├── class-kdna-charts-schema.php
 │   ├── class-kdna-charts-import.php
 │   ├── class-kdna-charts-data.php
+│   ├── class-kdna-charts-scale.php
 │   └── class-kdna-charts-admin.php
 ├── templates/
 │   ├── admin-add-new-placeholder.php
@@ -158,6 +214,32 @@ kdna-charts/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 3
+
+Nothing new is visible on the front end. The diagnostic is how this
+stage is checked.
+
+1. Import `collagen-decline-chart.json` if it is not already in the
+   library, and note its post ID.
+2. Visit `wp-admin/admin.php?kdna_debug=1&chart=ID`.
+3. Confirm the viewBox reads `0 0 1000 562.5`, the aspect ratio 16:9.
+4. Confirm the plot area is 886 wide and 448.5 high, starting at x 82.
+   The left and bottom padding are larger than the defaults because
+   both axes carry titles.
+5. Confirm both domains say **stated by the chart**, x from -8 to 20 and
+   y from 45 to 108.
+6. Confirm five x ticks and three y ticks, all marked **stated**, with
+   Year 0 strong and 10 and 15 muted, exactly as the file asks.
+7. Confirm the y tick at 100 has a solid rule and the other two dotted.
+8. Confirm the two segments list eleven points between them, each with
+   an SVG coordinate, and a path string beneath.
+9. Open a chart with no `min`, `max` or `ticks` and confirm the domains
+   say **inferred from the data** and the ticks say **generated**, at
+   round numbers.
+10. Add `&format=json` and confirm the same payload comes back as JSON.
+11. Log in as an editor rather than an administrator and confirm the
+    flag does nothing.
 
 ## Testing Stage 2
 
