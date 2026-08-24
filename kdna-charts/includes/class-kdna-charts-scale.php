@@ -93,8 +93,19 @@ class KDNA_Charts_Scale {
 	 * container. At the 18 unit default there is room to spare, and at
 	 * the narrow end it fits exactly.
 	 *
-	 * A site that raises the label size past 24 has to raise the padding
-	 * with it, which is what the padding controls at Stage 9 are for.
+	 * A site that raises the label size past 24 does not have to do
+	 * anything: the style engine tells this class what it set, through
+	 * the label_size and heading_size overrides, and the padding is
+	 * reserved for the LARGEST size configured at any breakpoint. That
+	 * has to be the largest rather than the current one, because the
+	 * breakpoint is decided by CSS in the browser and this geometry is
+	 * decided once, in PHP, for every width the chart will ever be drawn
+	 * at.
+	 *
+	 * The constant remains the floor. Reserving less than this would
+	 * break the narrow-chart rules in the stylesheet, which grow an
+	 * unset label to 24 on their own.
+	 *
 	 * The character width is for tabular digits, which is what the axis
 	 * labels are set in.
 	 */
@@ -102,8 +113,65 @@ class KDNA_Charts_Scale {
 	const LABEL_CHAR_WIDTH   = 0.62;
 	const LABEL_LINE_HEIGHT  = 1.25;
 
+	/**
+	 * Characters that are not the width of a digit.
+	 *
+	 * ── Why one number was not enough ─────────────────────────────────
+	 *
+	 * The estimate used to be a flat 0.62 for every character, and it
+	 * held for as long as the reserved size was larger than the drawn
+	 * one: labels were drawn at 18 units in a slot sized for 24, and the
+	 * third of a slot left over absorbed the error.
+	 *
+	 * The style engine removes that margin, because it reserves room for
+	 * exactly the size somebody asked for. So the error became visible,
+	 * and it became visible in the most ordinary case there is: a per
+	 * cent sign. In a normal sans face '%' is about one and a half times
+	 * the width of a digit, so "100%" is under-measured by around
+	 * fifteen per cent, and at a large label size that is enough to push
+	 * the label out of its slot and into the axis title beside it.
+	 *
+	 * These are eyeball figures for a normal sans face rather than real
+	 * metrics, which PHP has no way to read. They do not need to be
+	 * exact; they need to stop one class of character being badly wrong.
+	 */
+	const LABEL_CHAR_WIDTHS = array(
+		// Punctuation and the narrow letters.
+		' '  => 0.28,
+		'.'  => 0.32,
+		','  => 0.32,
+		':'  => 0.32,
+		';'  => 0.32,
+		"'"  => 0.24,
+		'|'  => 0.28,
+		'!'  => 0.30,
+		'i'  => 0.28,
+		'l'  => 0.28,
+		'j'  => 0.28,
+		'I'  => 0.30,
+		'-'  => 0.36,
+		'('  => 0.38,
+		')'  => 0.38,
+		// The wide ones.
+		'%'  => 0.98,
+		'@'  => 1.05,
+		'M'  => 0.86,
+		'W'  => 0.88,
+		'm'  => 0.92,
+		'w'  => 0.80,
+	);
+
+	/** Upper case, other than the two listed above. */
+	const LABEL_UPPER_WIDTH = 0.70;
+
 	/** How many ticks nice number generation aims for. */
 	const DEFAULT_TICK_TARGET = 6;
+
+	/** @var float The size padding reserves for a tick label. */
+	private $label_size = self::ASSUMED_LABEL_SIZE;
+
+	/** @var float The size padding reserves for a marker heading. */
+	private $heading_size = self::ASSUMED_LABEL_SIZE;
 
 	/**
 	 * Headroom added beyond the data extent when an axis does not state
@@ -277,6 +345,17 @@ class KDNA_Charts_Scale {
 		 * first; the padding is sized from them; the plot area follows;
 		 * and the positions are filled in last.
 		 */
+		/*
+		 * Both are floored at the constant and read before the padding,
+		 * which is the only thing that uses them.
+		 */
+		$scale->label_size   = isset( $overrides['label_size'] )
+			? max( self::ASSUMED_LABEL_SIZE, (float) $overrides['label_size'] )
+			: self::ASSUMED_LABEL_SIZE;
+		$scale->heading_size = isset( $overrides['heading_size'] )
+			? max( self::ASSUMED_LABEL_SIZE, (float) $overrides['heading_size'] )
+			: self::ASSUMED_LABEL_SIZE;
+
 		$scale->canvas     = $scale->resolve_canvas( $overrides );
 		$scale->categories = $scale->resolve_categories();
 
@@ -442,7 +521,7 @@ class KDNA_Charts_Scale {
 			$padding['left'] += self::AXIS_TITLE_SPACE;
 		}
 
-		$label_height = self::ASSUMED_LABEL_SIZE * self::LABEL_LINE_HEIGHT;
+		$label_height = $this->label_size * self::LABEL_LINE_HEIGHT;
 		if ( ! empty( $across_ticks ) ) {
 			$padding['bottom'] = max(
 				$padding['bottom'],
@@ -458,7 +537,7 @@ class KDNA_Charts_Scale {
 		 * Without this the heading is placed half off the canvas and the
 		 * annotation layer spends its effort rescuing it.
 		 */
-		$heading = self::EDGE_INSET + self::ASSUMED_LABEL_SIZE * self::LABEL_LINE_HEIGHT + 12;
+		$heading = self::EDGE_INSET + $this->heading_size * self::LABEL_LINE_HEIGHT + 12;
 		foreach ( $this->marker_label_edges() as $edge ) {
 			$padding[ $edge ] = max( $padding[ $edge ], $heading );
 		}
@@ -536,23 +615,66 @@ class KDNA_Charts_Scale {
 	/**
 	 * An estimate of how wide the longest label in a tick list will be
 	 * drawn. See ASSUMED_LABEL_SIZE for why this is an estimate.
+	 *
+	 * The widest label, not the longest one. "100%" is four characters
+	 * and wider than "1000", so counting characters picks the wrong
+	 * label as well as mis-measuring it.
 	 */
 	private function widest_label( array $ticks ) {
-		$longest = 0;
+		$widest = 0.0;
+
 		foreach ( $ticks as $tick ) {
 			$label = (string) ( $tick['label'] ?? '' );
 			if ( '' === $label ) {
 				continue;
 			}
-			// Multibyte aware, because a label may carry a currency
-			// symbol or an accented category name.
-			$length  = function_exists( 'mb_strlen' ) ? mb_strlen( $label ) : strlen( $label );
-			$longest = max( $longest, $length );
+			$widest = max( $widest, self::label_units( $label ) );
 		}
-		if ( 0 === $longest ) {
+
+		return $widest * $this->label_size;
+	}
+
+	/**
+	 * How wide a string is, in multiples of its own font size.
+	 *
+	 * Public so it can be measured against, not so it can be shared. The
+	 * annotation layer deliberately keeps its own flatter estimate: see
+	 * the note by KDNA_Charts_Annotations::CHAR_WIDTH for why a more
+	 * accurate measure made that layout worse rather than better.
+	 *
+	 * @param string $text  The text to measure.
+	 * @param float  $scale Multiplier for a heavier weight, which is
+	 *                      wider than the regular it is estimated from.
+	 * @return float Width in em.
+	 */
+	public static function label_units( $text, $scale = 1.0 ) {
+		$text = (string) $text;
+		if ( '' === $text ) {
 			return 0.0;
 		}
-		return $longest * self::LABEL_CHAR_WIDTH * self::ASSUMED_LABEL_SIZE;
+
+		// Multibyte aware, because a label may carry a currency symbol or
+		// an accented category name. Anything outside the table falls to
+		// the default, which is what a digit costs.
+		$characters = preg_split( '//u', $text, -1, PREG_SPLIT_NO_EMPTY );
+		if ( ! is_array( $characters ) ) {
+			$characters = str_split( $text );
+		}
+
+		$units = 0.0;
+		foreach ( $characters as $character ) {
+			if ( isset( self::LABEL_CHAR_WIDTHS[ $character ] ) ) {
+				$units += self::LABEL_CHAR_WIDTHS[ $character ];
+				continue;
+			}
+			if ( 1 === strlen( $character ) && ctype_upper( $character ) ) {
+				$units += self::LABEL_UPPER_WIDTH;
+				continue;
+			}
+			$units += self::LABEL_CHAR_WIDTH;
+		}
+
+		return $units * (float) $scale;
 	}
 
 	/**

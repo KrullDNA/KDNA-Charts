@@ -274,28 +274,48 @@ class KDNA_Charts_Editor {
 		<?php
 	}
 
+	/**
+	 * The Style tab: this chart's overrides of the global style
+	 * defaults.
+	 *
+	 * The panel comes from the style engine rather than from here,
+	 * because it is the same panel the settings page renders and the two
+	 * must not drift. This method's whole job is deciding whether to show
+	 * it, and saying something useful when it cannot.
+	 *
+	 * Administrators only, matching the meta's own auth callback. An
+	 * editor can change what a chart SAYS; changing how every instance of
+	 * it looks is a site-wide decision, and the route the panel saves
+	 * through would refuse them anyway.
+	 */
 	private static function render_style_tab( $post ) {
-		$overrides = KDNA_Charts_CPT::get_json_meta( $post->ID, KDNA_Charts_CPT::META_STYLE );
-		?>
-		<div class="kdna-editor__section">
-			<h3><?php esc_html_e( 'Per chart styling', 'kdna-charts' ); ?></h3>
-			<p class="description">
-				<?php esc_html_e( 'The style controls arrive at Stage 9, along with the global styling page they inherit from. Until then a chart takes the plugin defaults, and any style overrides carried in an imported file are stored untouched.', 'kdna-charts' ); ?>
-			</p>
-			<?php if ( ! empty( $overrides ) ) : ?>
-				<p>
-					<?php
-					printf(
-						/* translators: %d: number of stored style overrides */
-						esc_html( _n( 'This chart carries %d stored style override.', 'This chart carries %d stored style overrides.', count( $overrides ), 'kdna-charts' ) ),
-						count( $overrides )
-					);
-					?>
+		$chart_id = (int) $post->ID;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			$overrides = KDNA_Charts_CPT::get_json_meta( $chart_id, KDNA_Charts_CPT::META_STYLE );
+			?>
+			<div class="kdna-editor__section">
+				<h3><?php esc_html_e( 'Per chart styling', 'kdna-charts' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Chart styling is an administrator setting, because it changes how this chart looks everywhere it appears. Ask an administrator to change it.', 'kdna-charts' ); ?>
 				</p>
-				<pre class="kdna-editor__raw"><?php echo esc_html( (string) wp_json_encode( $overrides, JSON_PRETTY_PRINT ) ); ?></pre>
-			<?php endif; ?>
-		</div>
-		<?php
+				<?php if ( ! empty( $overrides ) ) : ?>
+					<p>
+						<?php
+						printf(
+							/* translators: %d: number of stored style overrides */
+							esc_html( _n( 'This chart carries %d style override.', 'This chart carries %d style overrides.', count( $overrides ), 'kdna-charts' ) ),
+							count( $overrides )
+						);
+						?>
+					</p>
+				<?php endif; ?>
+			</div>
+			<?php
+			return;
+		}
+
+		KDNA_Charts_Style_Admin::render_overrides_panel( $chart_id );
 	}
 
 	public static function render_shortcode_meta_box( $post ) {

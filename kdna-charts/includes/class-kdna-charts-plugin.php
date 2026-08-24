@@ -22,9 +22,27 @@ require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer-svg.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-import.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-admin.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-editor.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-schema.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-resolver.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-admin.php';
 
 KDNA_Charts_CPT::init();
 KDNA_Charts_Scale_Debug::init();
+
+/*
+ * The style engine boots outside is_admin(), and both halves have to.
+ *
+ * Style_Admin registers REST routes on rest_api_init, and a /wp-json/
+ * request is not an admin request: inside the guard the settings page
+ * would render and then have nothing to save through.
+ *
+ * Style_Resolver's invalidation watches option and meta writes, which
+ * can come from WP-CLI, an importer or another plugin, none of which are
+ * admin requests either. A cached style string with no way to clear it
+ * is worse than the cache is worth.
+ */
+KDNA_Charts_Style_Admin::init();
+KDNA_Charts_Style_Resolver::register_invalidation();
 
 if ( is_admin() ) {
 	KDNA_Charts_Admin::init();

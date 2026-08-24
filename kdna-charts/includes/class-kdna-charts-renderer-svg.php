@@ -142,10 +142,7 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			return $this->render_radial();
 		}
 
-		$this->scale = KDNA_Charts_Scale::for_chart(
-			$this->definition,
-			isset( $this->args['scale'] ) && is_array( $this->args['scale'] ) ? $this->args['scale'] : array()
-		);
+		$this->scale = KDNA_Charts_Scale::for_chart( $this->definition, $this->scale_args() );
 
 		if ( ! $this->scale instanceof KDNA_Charts_Scale ) {
 			return $this->placeholder( __( 'This chart type has no axes to draw against.', 'kdna-charts' ) );
@@ -170,6 +167,7 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		 */
 		$layers = array(
 			$this->render_defs(),
+			$this->render_plot_area(),
 			$this->render_gridlines(),
 			$this->annotations ? $this->annotations->render_under() : '',
 			$this->render_series(),
@@ -242,6 +240,76 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		}
 
 		return self::tag( 'defs', array(), implode( '', $gradients ) );
+	}
+
+	/**
+	 * What the scale engine is told, including what the style engine has
+	 * done to the label sizes.
+	 *
+	 * The scale reserves padding for a tick label from an assumed size,
+	 * because PHP cannot measure text. Raising a label size without
+	 * telling it produces a label that runs into the axis title, so the
+	 * largest size configured at any breakpoint is passed through. See
+	 * Style_Resolver::largest_size() for why it is the largest rather
+	 * than the current one.
+	 *
+	 * A caller's own scale overrides still win: they are applied last,
+	 * because a caller passing an explicit label_size is saying
+	 * something more specific than the cascade is.
+	 */
+	protected function scale_args() {
+		$args = isset( $this->args['scale'] ) && is_array( $this->args['scale'] )
+			? $this->args['scale']
+			: array();
+
+		if ( ! class_exists( 'KDNA_Charts_Style_Resolver' ) ) {
+			return $args;
+		}
+
+		$sizes = array(
+			'label_size'   => 'axis_label_size',
+			'heading_size' => 'marker_label_size',
+		);
+
+		$from_styles = array();
+		foreach ( $sizes as $arg => $control ) {
+			$size = KDNA_Charts_Style_Resolver::largest_size( $this->chart_id, $control );
+			if ( $size > 0 ) {
+				$from_styles[ $arg ] = $size;
+			}
+		}
+
+		return array_merge( $from_styles, $args );
+	}
+
+	/**
+	 * The rectangle the data is drawn inside.
+	 *
+	 * Emitted on every plotted chart whether or not anything paints it,
+	 * because there is no way to add a rectangle to an SVG from CSS. It
+	 * is transparent and unstroked by default, so a chart that says
+	 * nothing about its plot area still draws nothing extra.
+	 *
+	 * First in the drawing order, under the gridlines: a plot tint is a
+	 * ground for the chart to sit on, and a ground drawn over the
+	 * gridlines would be a chart with no gridlines.
+	 *
+	 * Only plotted charts get one. A pie has no rectangle its data is
+	 * inside, and a stat block has no plot at all.
+	 */
+	protected function render_plot_area() {
+		$plot = $this->scale->plot_area();
+
+		return self::tag(
+			'rect',
+			array(
+				'class'  => self::css( 'plot-area' ),
+				'x'      => KDNA_Charts_Scale::round_coord( $plot['x'] ),
+				'y'      => KDNA_Charts_Scale::round_coord( $plot['y'] ),
+				'width'  => KDNA_Charts_Scale::round_coord( $plot['width'] ),
+				'height' => KDNA_Charts_Scale::round_coord( $plot['height'] ),
+			)
+		);
 	}
 
 	/**
@@ -948,10 +1016,7 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			return $this->placeholder( __( 'This chart has nothing to divide up yet.', 'kdna-charts' ) );
 		}
 
-		$frame  = KDNA_Charts_Scale::frame(
-			$this->definition,
-			isset( $this->args['scale'] ) && is_array( $this->args['scale'] ) ? $this->args['scale'] : array()
-		);
+		$frame  = KDNA_Charts_Scale::frame( $this->definition, $this->scale_args() );
 		$canvas = $frame['canvas'];
 		$plot   = $frame['plot'];
 

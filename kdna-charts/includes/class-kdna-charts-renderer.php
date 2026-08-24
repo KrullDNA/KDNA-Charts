@@ -178,8 +178,57 @@ abstract class KDNA_Charts_Renderer {
 			array(
 				'class' => $this->wrapper_classes(),
 				'id'    => $this->uid,
+				'style' => $this->wrapper_style(),
 			),
 			implode( '', array_filter( $parts ) )
+		);
+	}
+
+	/**
+	 * The resolved style engine properties, as an inline style
+	 * attribute value.
+	 *
+	 * ── Why the properties are written here ───────────────────────────
+	 *
+	 * A chart can be rendered from a shortcode inside a repeater field,
+	 * or by an Elementor widget in a template, and neither is visible to
+	 * has_shortcode(), which only reads post_content. So there is no
+	 * reliable point at which a style block could be printed into the
+	 * head knowing a chart is on the page. Writing the properties onto
+	 * the wrapper at render time works wherever the chart lands, cannot
+	 * arrive after the markup, and needs no page scanning.
+	 *
+	 * The style argument is the fourth layer of the cascade, and exists
+	 * for the Elementor widget: its controls resolve to the same control
+	 * keys and are merged on top of the global option and the chart's
+	 * own overrides.
+	 *
+	 * Guarded on class_exists rather than assumed, because the renderer
+	 * is exercised by tests that load it without the style engine, and a
+	 * fatal there would be a test harness failing for a reason that has
+	 * nothing to do with what it is testing.
+	 */
+	protected function wrapper_style() {
+		if ( ! class_exists( 'KDNA_Charts_Style_Resolver' ) ) {
+			return '';
+		}
+
+		$extra = ( isset( $this->args['style'] ) && is_array( $this->args['style'] ) )
+			? $this->args['style']
+			: array();
+
+		/*
+		 * The cached path is only correct when there is no extra layer.
+		 * With one, the result is per render rather than per chart, and
+		 * caching it under the chart's key would serve one widget's
+		 * controls to every other chart on the site.
+		 */
+		if ( empty( $extra ) ) {
+			return KDNA_Charts_Style_Resolver::style_attribute_for( $this->chart_id );
+		}
+
+		return KDNA_Charts_Style_Resolver::to_style_attribute(
+			KDNA_Charts_Style_Resolver::resolve( $this->chart_id, $extra )
 		);
 	}
 
@@ -240,6 +289,11 @@ abstract class KDNA_Charts_Renderer {
 				'title'   => (string) ( $this->definition['title'] ?? '' ),
 				'block'   => self::CSS_BLOCK,
 				'classes' => $this->wrapper_classes() . ' ' . self::CSS_BLOCK . '--placeholder',
+				// The placeholder is still the chart's frame, so it takes
+				// the chart's frame styling. A box that ignored the
+				// site's background and padding would read as a broken
+				// page rather than as a chart waiting for data.
+				'style'   => $this->wrapper_style(),
 			)
 		);
 	}

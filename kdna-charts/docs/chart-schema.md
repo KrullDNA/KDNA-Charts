@@ -270,6 +270,39 @@ about colour picks up the site palette automatically.
 That is what makes an imported chart look like it belongs to the site
 it landed on.
 
+Every key is one of the control keys listed in
+[`style-controls.md`](style-controls.md), and every one of them writes a
+single CSS custom property. A key the schema does not recognise is
+discarded and reported, like any other unknown key.
+
+A value is written in the shape its control takes:
+
+```json
+"style": {
+  "series_colour_strong": "#7c2d12",
+  "gridline_width":  { "size": 2, "unit": "px" },
+  "frame_padding":   { "top": 1, "right": 1, "bottom": 1, "left": 1, "unit": "rem" },
+  "caption_align":   "center"
+}
+```
+
+A control marked responsive takes the same shape again under a
+breakpoint key, and a breakpoint left out inherits the one above it:
+
+```json
+"axis_label_size": {
+  "desktop": { "size": 18, "unit": "px" },
+  "mobile":  { "size": 30, "unit": "px" }
+}
+```
+
+Writing a bare value where a breakpoint map is expected is accepted and
+read as desktop, so the shorter form above the split is not an error.
+
+Importing a chart's `style` needs the `manage_options` capability. For
+anyone else the key is stripped and the import summary says so, because
+styling changes how a chart looks everywhere it appears.
+
 ---
 
 ## Validation behaviour

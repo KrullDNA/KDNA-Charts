@@ -1,0 +1,699 @@
+/*
+ * KDNA Charts, the style engine's admin screens.
+ *
+ * Two screens share this file: Settings > KDNA Charts, and the Style tab
+ * of the chart editor. They render from one template, so they get one
+ * stylesheet; the panel variant narrows a few things that have less room
+ * inside a meta box.
+ *
+ * Nothing here uses the chart's own custom properties. These are admin
+ * chrome, and borrowing the front-end tokens would mean a site that
+ * restyled its charts had also restyled the controls it restyles them
+ * with.
+ *
+ * @package KDNA_Charts
+ */
+
+.kdna-style-admin {
+	--kdna-admin-border: #dcdcde;
+	--kdna-admin-border-strong: #c3c4c7;
+	--kdna-admin-bg: #fff;
+	--kdna-admin-bg-soft: #f6f7f7;
+	--kdna-admin-text: #1d2327;
+	--kdna-admin-text-soft: #646970;
+	--kdna-admin-accent: #2271b1;
+	--kdna-admin-ok: #007017;
+	--kdna-admin-warn: #8a6d00;
+	--kdna-admin-error: #b32d2e;
+	--kdna-admin-radius: 4px;
+}
+
+/*
+ * x-cloak hides the layout until Alpine has bound it, so nobody sees a
+ * page of unbound expressions. It is on the layout and NOT on the
+ * wrapper, deliberately: the wrapper also carries the warning that shows
+ * when Alpine never started, and cloaking that would hide the message at
+ * exactly the moment it needs to be read.
+ */
+.kdna-style-admin [x-cloak] {
+	display: none !important;
+}
+
+.kdna-style-admin__intro {
+	max-width: 46rem;
+	color: var( --kdna-admin-text-soft );
+}
+
+/* ---------------------------------------------------------------------
+ * Tools: export and import
+ * ------------------------------------------------------------------ */
+
+.kdna-style-tools {
+	margin: 1rem 0;
+}
+
+.kdna-style-tools__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.kdna-style-tools__row .button .dashicons {
+	margin-top: 3px;
+	margin-right: 2px;
+}
+
+.kdna-style-tools__panel {
+	max-width: 48rem;
+	margin-top: 0.75rem;
+	padding: 1rem;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-style-tools__hint {
+	margin-top: 0;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-style-tools__file {
+	display: block;
+	margin-bottom: 0.75rem;
+}
+
+.kdna-style-tools__textarea {
+	width: 100%;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+}
+
+.kdna-style-tools__actions {
+	margin-top: 0.75rem;
+}
+
+.kdna-style-tools__discarded {
+	margin-top: 1rem;
+	padding: 0.75rem;
+	background: #fcf9e8;
+	border-left: 4px solid #dba617;
+}
+
+.kdna-style-tools__discarded ul {
+	margin: 0.5rem 0 0 1.25rem;
+	list-style: disc;
+}
+
+/* ---------------------------------------------------------------------
+ * Live preview
+ * ------------------------------------------------------------------ */
+
+.kdna-style-preview {
+	margin: 1rem 0 1.5rem;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-style-preview__bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	align-items: center;
+	padding: 0.75rem 1rem;
+	background: var( --kdna-admin-bg-soft );
+	border-bottom: 1px solid var( --kdna-admin-border );
+}
+
+.kdna-style-preview__control {
+	display: flex;
+	gap: 0.4rem;
+	align-items: center;
+}
+
+.kdna-style-preview__label {
+	font-weight: 600;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-style-preview__devices {
+	display: flex;
+	gap: 0.25rem;
+	margin-left: auto;
+}
+
+.kdna-style-preview__device {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 0.3rem 0.6rem;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border-strong );
+	border-radius: var( --kdna-admin-radius );
+	cursor: pointer;
+	line-height: 1.2;
+}
+
+.kdna-style-preview__device.is-active {
+	background: var( --kdna-admin-accent );
+	border-color: var( --kdna-admin-accent );
+	color: #fff;
+}
+
+.kdna-style-preview__width {
+	font-size: 11px;
+	opacity: 0.7;
+}
+
+.kdna-style-preview__status {
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-style-preview__status.is-error {
+	color: var( --kdna-admin-error );
+}
+
+.kdna-style-preview__notice {
+	margin: 0;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid var( --kdna-admin-border );
+	color: var( --kdna-admin-text-soft );
+	font-size: 13px;
+}
+
+.kdna-style-preview__notice.is-warning {
+	background: #fcf9e8;
+	color: var( --kdna-admin-warn );
+}
+
+/*
+ * The stage scrolls rather than the page. A 1200px frame inside a narrow
+ * admin column has to go somewhere, and squeezing it would make the
+ * preview a lie about the width it claims to be showing.
+ */
+.kdna-style-preview__stage {
+	overflow-x: auto;
+	padding: 1rem;
+}
+
+.kdna-style-preview__frame {
+	display: block;
+	height: 420px;
+	max-width: none;
+	background: #fff;
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-style-preview__empty {
+	margin: 1rem 0;
+	padding: 1rem;
+	background: var( --kdna-admin-bg-soft );
+	border: 1px dashed var( --kdna-admin-border-strong );
+	border-radius: var( --kdna-admin-radius );
+	color: var( --kdna-admin-text-soft );
+}
+
+/* ---------------------------------------------------------------------
+ * Sections and controls
+ * ------------------------------------------------------------------ */
+
+.kdna-style-admin__body {
+	display: grid;
+	grid-template-columns: 15rem minmax( 0, 1fr );
+	gap: 1.5rem;
+	align-items: start;
+	margin-top: 1rem;
+}
+
+@media ( max-width: 960px ) {
+
+	.kdna-style-admin__body {
+		grid-template-columns: minmax( 0, 1fr );
+	}
+}
+
+.kdna-style-tabs {
+	display: flex;
+	flex-direction: column;
+	position: sticky;
+	top: 46px;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+	overflow: hidden;
+}
+
+@media ( max-width: 960px ) {
+
+	.kdna-style-tabs {
+		position: static;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+}
+
+.kdna-style-tab {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	padding: 0.5rem 0.75rem;
+	background: none;
+	border: 0;
+	border-bottom: 1px solid var( --kdna-admin-border );
+	text-align: left;
+	cursor: pointer;
+	color: var( --kdna-admin-text );
+}
+
+.kdna-style-tab:last-child {
+	border-bottom: 0;
+}
+
+.kdna-style-tab.is-active {
+	background: var( --kdna-admin-accent );
+	color: #fff;
+}
+
+.kdna-style-tab__label {
+	flex: 1 1 auto;
+}
+
+.kdna-style-tab__count {
+	font-size: 11px;
+	opacity: 0.6;
+}
+
+/* A section carrying a value, so a setting left behind is visible. */
+.kdna-style-tab__dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.kdna-style-panel {
+	min-width: 0;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+}
+
+.kdna-style-search {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	padding: 0.75rem 1rem;
+	background: var( --kdna-admin-bg-soft );
+	border-bottom: 1px solid var( --kdna-admin-border );
+}
+
+.kdna-style-search__input {
+	flex: 0 1 22rem;
+}
+
+.kdna-style-search__count {
+	color: var( --kdna-admin-text-soft );
+	font-size: 12px;
+}
+
+.kdna-style-panel__header {
+	display: flex;
+	gap: 1rem;
+	align-items: baseline;
+	padding: 1rem 1rem 0;
+}
+
+.kdna-style-panel__heading {
+	margin: 0;
+	flex: 1 1 auto;
+	font-size: 15px;
+}
+
+.kdna-style-panel__empty {
+	padding: 1rem;
+	color: var( --kdna-admin-text-soft );
+}
+
+/*
+ * A group heading, not a fieldset. These are display groupings inside a
+ * section, Tick Labels inside Axis Labels, and every control in one is
+ * still an independent control writing its own property. A fieldset
+ * would say they were one thing.
+ */
+.kdna-style-group {
+	margin: 1.25rem 0 0;
+	padding: 0 1rem;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var( --kdna-admin-text-soft );
+}
+
+.kdna-style-group__body {
+	display: block;
+}
+
+.kdna-style-field {
+	padding: 0.75rem 1rem;
+	border-top: 1px solid #f0f0f1;
+}
+
+.kdna-style-group + .kdna-style-group__body > .kdna-style-field:first-child {
+	border-top: 0;
+}
+
+.kdna-style-field.is-inherited {
+	background: var( --kdna-admin-bg-soft );
+}
+
+.kdna-style-field__head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.kdna-style-field__label {
+	flex: 1 1 12rem;
+	font-weight: 600;
+}
+
+.kdna-style-field__tools {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+/*
+ * The value the stylesheet renders when this control says nothing.
+ *
+ * Shown on every control rather than only on the empty ones, because
+ * what a blank field means is the single most confusing thing about a
+ * cascade like this one: blank is not "nothing", it is "this value,
+ * unless I say otherwise".
+ */
+.kdna-style-field__default {
+	color: var( --kdna-admin-text-soft );
+	font-size: 11px;
+}
+
+.kdna-style-field__default code {
+	padding: 1px 4px;
+	background: var( --kdna-admin-bg-soft );
+	font-size: 11px;
+}
+
+.kdna-style-field__description {
+	margin: 0.25rem 0 0.5rem;
+	max-width: 44rem;
+	color: var( --kdna-admin-text-soft );
+	font-size: 12px;
+}
+
+.kdna-style-field__reset,
+.kdna-style-field__override {
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var( --kdna-admin-accent );
+	font-size: 12px;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.kdna-style-inherited {
+	display: flex;
+	gap: 0.5rem;
+	align-items: baseline;
+	margin: 0.35rem 0 0;
+	color: var( --kdna-admin-text-soft );
+	font-size: 12px;
+}
+
+.kdna-style-inherited__label {
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-size: 10px;
+}
+
+.kdna-style-inherited__value {
+	font-family: Consolas, Monaco, monospace;
+}
+
+/* ---------------------------------------------------------------------
+ * Control types
+ * ------------------------------------------------------------------ */
+
+.kdna-style-colour,
+.kdna-style-slider,
+.kdna-style-dimensions,
+.kdna-style-number {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	align-items: center;
+	margin-top: 0.35rem;
+}
+
+.kdna-style-colour__picker {
+	width: 34px;
+	height: 30px;
+	padding: 2px;
+	border: 1px solid var( --kdna-admin-border-strong );
+	border-radius: var( --kdna-admin-radius );
+	background: none;
+	cursor: pointer;
+}
+
+/*
+ * An unset colour. The input beneath still shows black, because that is
+ * all a native colour input can show, so it is covered: a pale ground
+ * with a line through it, which is what "no colour" means to anybody who
+ * has used a drawing tool. Clicking it still opens the picker, and
+ * picking a colour clears the class.
+ */
+.kdna-style-colour__picker.is-unset {
+	position: relative;
+	background:
+		linear-gradient(
+			to top right,
+			transparent calc( 50% - 1px ),
+			var( --kdna-admin-error ) calc( 50% - 1px ),
+			var( --kdna-admin-error ) calc( 50% + 1px ),
+			transparent calc( 50% + 1px )
+		),
+		#fff;
+}
+
+/*
+ * The swatch the browser paints inside the input would cover the slash,
+ * so it is hidden while the control is unset. Both prefixes: WebKit and
+ * Firefox name this pseudo-element differently and neither honours the
+ * other's.
+ */
+.kdna-style-colour__picker.is-unset::-webkit-color-swatch {
+	opacity: 0;
+}
+
+.kdna-style-colour__picker.is-unset::-moz-color-swatch {
+	opacity: 0;
+}
+
+.kdna-style-colour__text {
+	flex: 0 1 14rem;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+}
+
+.kdna-style-slider__range {
+	flex: 1 1 10rem;
+	max-width: 18rem;
+}
+
+.kdna-style-slider__number,
+.kdna-style-number input[type="number"] {
+	width: 6rem;
+}
+
+.kdna-style-unit {
+	min-width: 4.5rem;
+}
+
+.kdna-style-unit--fixed {
+	color: var( --kdna-admin-text-soft );
+	font-size: 12px;
+}
+
+.kdna-style-input {
+	flex: 0 1 20rem;
+	max-width: 100%;
+}
+
+.kdna-style-dimensions__side {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	width: 5.5rem;
+}
+
+.kdna-style-dimensions__side input {
+	width: 100%;
+}
+
+.kdna-style-dimensions__label {
+	color: var( --kdna-admin-text-soft );
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.kdna-style-link,
+.kdna-style-clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: none;
+	border: 1px solid transparent;
+	border-radius: var( --kdna-admin-radius );
+	color: var( --kdna-admin-text-soft );
+	cursor: pointer;
+}
+
+.kdna-style-link:hover,
+.kdna-style-clear:hover {
+	border-color: var( --kdna-admin-border-strong );
+	color: var( --kdna-admin-text );
+}
+
+.kdna-style-link.is-linked {
+	color: var( --kdna-admin-accent );
+	border-color: var( --kdna-admin-accent );
+}
+
+/* ---------------------------------------------------------------------
+ * Breakpoint switcher
+ * ------------------------------------------------------------------ */
+
+.kdna-style-devices {
+	display: inline-flex;
+	border: 1px solid var( --kdna-admin-border-strong );
+	border-radius: var( --kdna-admin-radius );
+	overflow: hidden;
+}
+
+.kdna-style-devices__btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 24px;
+	padding: 0;
+	background: var( --kdna-admin-bg );
+	border: 0;
+	border-right: 1px solid var( --kdna-admin-border );
+	color: var( --kdna-admin-text-soft );
+	cursor: pointer;
+}
+
+.kdna-style-devices__btn:last-child {
+	border-right: 0;
+}
+
+.kdna-style-devices__btn .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+}
+
+.kdna-style-devices__btn.is-active {
+	background: var( --kdna-admin-accent );
+	color: #fff;
+}
+
+/*
+ * A dot on a breakpoint that already carries a value. Without it, a
+ * value set at mobile is invisible from desktop, and the only way to
+ * find out whether one exists is to click all three.
+ */
+.kdna-style-devices__btn.has-value::after {
+	content: "";
+	position: absolute;
+	right: 3px;
+	bottom: 3px;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: var( --kdna-admin-accent );
+}
+
+.kdna-style-devices__btn.is-active.has-value::after {
+	background: #fff;
+}
+
+/* ---------------------------------------------------------------------
+ * Save bar
+ * ------------------------------------------------------------------ */
+
+.kdna-style-savebar {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	margin-top: 1rem;
+	padding: 0.75rem 1rem;
+	background: var( --kdna-admin-bg );
+	border: 1px solid var( --kdna-admin-border );
+	border-radius: var( --kdna-admin-radius );
+	box-shadow: 0 -2px 6px rgba( 0, 0, 0, 0.05 );
+}
+
+.kdna-style-savebar__reset {
+	margin-left: auto;
+}
+
+.kdna-style-savebar__status.is-ok { color: var( --kdna-admin-ok ); }
+.kdna-style-savebar__status.is-warning { color: var( --kdna-admin-warn ); }
+.kdna-style-savebar__status.is-error { color: var( --kdna-admin-error ); }
+
+.kdna-style-savebar__dirty {
+	color: var( --kdna-admin-warn );
+	font-style: italic;
+}
+
+/* ---------------------------------------------------------------------
+ * The per chart panel
+ *
+ * Same markup inside a meta box, which is narrower and has a chart
+ * preview of its own above it. The tab column goes horizontal and the
+ * preview pane comes out, because two live previews on one screen is one
+ * too many.
+ * ------------------------------------------------------------------ */
+
+.kdna-style-admin--panel .kdna-style-admin__body {
+	grid-template-columns: minmax( 0, 1fr );
+}
+
+.kdna-style-admin--panel .kdna-style-tabs {
+	position: static;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.kdna-style-admin--panel .kdna-style-tab {
+	border-bottom: 0;
+	border-right: 1px solid var( --kdna-admin-border );
+}
+
+.kdna-style-admin--panel .kdna-style-savebar {
+	position: static;
+	box-shadow: none;
+}
