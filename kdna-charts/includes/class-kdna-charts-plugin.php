@@ -25,6 +25,8 @@ require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-editor.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-schema.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-resolver.php';
 require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-style-admin.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-renderer-chartjs.php';
+require_once KDNA_CHARTS_PATH . 'includes/class-kdna-charts-shortcode.php';
 
 KDNA_Charts_CPT::init();
 KDNA_Charts_Scale_Debug::init();
@@ -43,6 +45,12 @@ KDNA_Charts_Scale_Debug::init();
  */
 KDNA_Charts_Style_Admin::init();
 KDNA_Charts_Style_Resolver::register_invalidation();
+
+// Stage 10 shortcode and Stage 12 Chart.js engine. Both boot outside
+// is_admin(): the shortcode registers on wp_enqueue_scripts and the
+// Chart.js engine registers its (conditionally enqueued) assets there too.
+KDNA_Charts_Shortcode::init();
+KDNA_Charts_Renderer_ChartJS::init();
 
 if ( is_admin() ) {
 	KDNA_Charts_Admin::init();

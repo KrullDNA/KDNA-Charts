@@ -90,14 +90,24 @@ abstract class KDNA_Charts_Renderer {
 			if ( file_exists( $file ) ) {
 				require_once $file;
 				if ( class_exists( 'KDNA_Charts_Renderer_ChartJS' ) ) {
-					return new KDNA_Charts_Renderer_ChartJS( $definition, $args );
+					$renderer = new KDNA_Charts_Renderer_ChartJS( $definition, $args );
+					/*
+					 * The Chart.js engine draws the six plotted types but not
+					 * the typographic stat block. A type it cannot draw falls
+					 * back to SVG rather than showing an error: the engine
+					 * choice is the author's convenience, and an apologetic
+					 * chart would be the reader's problem.
+					 */
+					if ( $renderer->supports_type( (string) ( $definition['type'] ?? '' ) ) ) {
+						return $renderer;
+					}
 				}
 			}
 			/*
-			 * The Chart.js engine lands at Stage 12. Until it does, a
-			 * chart set to it renders in SVG rather than not at all,
-			 * because a missing engine is the plugin's problem and a
-			 * blank space on the page would be the reader's.
+			 * If the Chart.js engine is unavailable or cannot draw this type,
+			 * the chart renders in SVG rather than not at all, because a
+			 * missing engine is the plugin's problem and a blank space on the
+			 * page would be the reader's.
 			 */
 		}
 
@@ -173,13 +183,39 @@ abstract class KDNA_Charts_Renderer {
 			$parts[] = $this->render_source();
 		}
 
+		/*
+		 * The optional screen-reader data table (Stage 13). The slim data
+		 * payload is emitted as a JSON script the front-end layer reads to
+		 * build a visually hidden <table>. The server-side aria description
+		 * already gives every reader the shape of the chart; this gives the
+		 * reader who needs the figures the figures themselves.
+		 */
+		if ( ! empty( $this->args['a11y_table'] ) ) {
+			$parts[] = $this->data_payload_script();
+		}
+
+		$attributes = array(
+			'class' => $this->wrapper_classes(),
+			'id'    => $this->uid,
+			'style' => $this->wrapper_style(),
+		);
+
+		/*
+		 * The front-end layer (Stage 13) hands its data attributes here —
+		 * data-animate, data-thin-below, data-a11y-table — so the scroll-in
+		 * animation, mobile label thinning and screen-reader table can find
+		 * their chart. Set on the figure the renderer already owns, so the
+		 * enhancement layer needs no wrapper of its own.
+		 */
+		if ( ! empty( $this->args['atts'] ) && is_array( $this->args['atts'] ) ) {
+			foreach ( $this->args['atts'] as $name => $value ) {
+				$attributes[ $name ] = $value;
+			}
+		}
+
 		return self::tag(
 			'figure',
-			array(
-				'class' => $this->wrapper_classes(),
-				'id'    => $this->uid,
-				'style' => $this->wrapper_style(),
-			),
+			$attributes,
 			implode( '', array_filter( $parts ) )
 		);
 	}
@@ -322,6 +358,83 @@ abstract class KDNA_Charts_Renderer {
 	 * Accessibility
 	 * ====================================================================
 	 */
+
+	/**
+	 * The slim data payload the front-end layer (Stage 13) turns into a
+	 * visually hidden table, as a JSON script inside the figure.
+	 *
+	 * The shape matches assets/js/kdna-charts.js: a `series` list of
+	 * { label, points:[[x, y], …] } for plotted charts, one column per
+	 * series in the reader's table. A caption and an x-axis heading travel
+	 * with it so the table reads on its own.
+	 *
+	 * @return string
+	 */
+	protected function data_payload_script() {
+		$series_out = array();
+
+		foreach ( $this->series() as $index => $series ) {
+			$points = $this->series_points( $series );
+			if ( empty( $points ) ) {
+				continue;
+			}
+
+			$label = trim( (string) ( $series['label'] ?? '' ) );
+			if ( '' === $label ) {
+				$label = sprintf(
+					/* translators: %d: series number */
+					__( 'Series %d', 'kdna-charts' ),
+					$index + 1
+				);
+			}
+
+			$series_out[] = array(
+				'label'  => $label,
+				'points' => array_map(
+					static function ( $point ) {
+						return array( $point[0], $point[1] );
+					},
+					$points
+				),
+			);
+		}
+
+		if ( empty( $series_out ) ) {
+			return '';
+		}
+
+		$payload = array(
+			'caption' => $this->accessible_title(),
+			'x'       => $this->x_axis_heading(),
+			'series'  => $series_out,
+		);
+
+		$json = wp_json_encode( $payload );
+		if ( false === $json ) {
+			return '';
+		}
+
+		return self::tag(
+			'script',
+			array(
+				'type'  => 'application/json',
+				'class' => self::CSS_BLOCK . '__data',
+			),
+			$json
+		);
+	}
+
+	/**
+	 * The x-axis heading for the data table, from the definition's axis
+	 * title when present, else a plain label.
+	 */
+	protected function x_axis_heading() {
+		$axes = isset( $this->definition['axes'] ) && is_array( $this->definition['axes'] ) ? $this->definition['axes'] : array();
+		if ( isset( $axes['x']['title'] ) && '' !== trim( (string) $axes['x']['title'] ) ) {
+			return trim( (string) $axes['x']['title'] );
+		}
+		return __( 'X', 'kdna-charts' );
+	}
 
 	/**
 	 * The chart's accessible name. What a screen reader announces first,

@@ -1413,3 +1413,72 @@
 		print-color-adjust: exact;
 	}
 }
+
+/* ---------------------------------------------------------------------
+ * Chart.js canvas (Stage 12)
+ *
+ * The Chart.js engine draws into a <canvas> inside this plot wrapper.
+ * Chart.js sizes the canvas itself from the wrapper's width (responsive +
+ * maintainAspectRatio), so the wrapper only has to be a full-width block.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__plot--chartjs {
+	position: relative;
+	width: 100%;
+}
+
+.kdna-chart__canvas {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------
+ * Screen-reader data table (Stage 13)
+ *
+ * The front-end layer builds a <table> of the chart data and appends it
+ * to the figure when the chart opts in. It is reachable by assistive
+ * technology and removed from the visual flow with the standard
+ * visually-hidden pattern (clipped, not display:none, so it stays in the
+ * accessibility tree). The JSON payload it is built from never renders.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__a11y-table,
+.kdna-chart .screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.kdna-chart__data {
+	display: none;
+}
+
+/* ---------------------------------------------------------------------
+ * Scroll-triggered draw-in (Stage 13)
+ *
+ * A chart that opts in is armed hidden, then revealed as it scrolls into
+ * view. The whole behaviour is gated on the reader NOT having asked for
+ * reduced motion: inside the reduce query the armed state is neutralised,
+ * so a chart is never left hidden even if the script's own guard is
+ * bypassed. The GSAP line draw, when present, layers on top of this.
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+	.kdna-chart--anim-armed {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+
+	.kdna-chart--anim-in {
+		opacity: 1;
+		transform: translateY(0);
+		transition: opacity 0.7s ease, transform 0.7s ease;
+	}
+}

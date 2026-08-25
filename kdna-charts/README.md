@@ -7,14 +7,23 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 9 of 13, the style engine
+- **Build stage:** 13 of 13 — complete
 
-A full README, written for someone installing the finished plugin,
-arrives at Stage 13. What follows is the state of the build.
+All thirteen stages are built and consolidated into this one plugin. The
+chart post type, the JSON importer, the SVG renderer and its annotation
+layer, the style engine (schema, resolver, Settings page and per-chart
+panel), the `[kdna_chart]` shortcode, the Elementor widget, the Chart.js
+engine, and the front-end enhancement layer all share one spine: one style
+vocabulary, one renderer factory, one resolver. The shortcode and the
+widget render through the same factory and produce identical markup; the
+style engine writes the exact `--kdna-chart-*` custom properties the SVG
+stylesheet reads and the Chart.js engine bakes into its config, so the
+Settings page controls the real chart in both engines.
 
 ## What is built
 
-Nothing draws yet. The first visible output arrives at Stage 4.
+Every piece below is done. The status table records which stage each
+arrived in.
 
 | Piece | Stage | State |
 | --- | --- | --- |
@@ -43,6 +52,12 @@ Nothing draws yet. The first visible output arrives at Stage 4.
 | Live preview, rendered by the server | 8 | Done |
 | Type chooser modal on Add New | 8 | Done |
 | Add New screen | 8 | Placeholder, real type chooser at Stage 8 |
+| Style engine: schema, resolver, Settings page, per-chart panel, live preview, presets | 9 | Done |
+| `[kdna_chart]` shortcode, styles resolved onto the figure, always-load CSS setting | 10 | Done |
+| Elementor widget in the KDNA Tools category, Style tab generated from the schema | 11 | Done |
+| Chart.js engine, styled from the resolved values, tooltips and toggleable legend | 12 | Done |
+| Conditional Chart.js assets, bundled locally, loaded only where a Chart.js chart renders | 12 | Done |
+| Front-end layer: scroll-in animation, screen-reader data table, mobile label thinning | 13 | Done |
 
 ## Data model
 
