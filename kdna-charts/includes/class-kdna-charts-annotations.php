@@ -68,6 +68,29 @@ class KDNA_Charts_Annotations {
 	 * enough to matter. A heading measured at the lighter figure
 	 * reserves a box narrower than the words drawn in it, and the next
 	 * label tucks in against it and clips the last letter.
+	 *
+	 * ── Why this is flat, when the scale's is not ─────────────────────
+	 *
+	 * KDNA_Charts_Scale::label_units() weighs each character, because a
+	 * per cent sign in an axis label is half again the width of a digit
+	 * and the padding has to hold it. It would be the better measure
+	 * here too, and it was tried here.
+	 *
+	 * It made the layout worse. These figures are not an isolated
+	 * estimate: they are one input to a tuned system, along with
+	 * NOTE_WRAP_FRACTION, NUDGE_STEP and BOX_PADDING, and that system
+	 * was settled by looking at real charts. Measuring the same note
+	 * more accurately let another two words fit on its first line, which
+	 * made the box wide enough to reach the callout beside it, and the
+	 * nudger then threw the note eight steps down into the middle of the
+	 * curve. More accurate, and a worse chart.
+	 *
+	 * So the accurate measure stays where the inaccuracy was actually
+	 * causing a collision, the tick labels against the axis title, and
+	 * this stays as it was tuned. The two never compare notes: the scale
+	 * measures label WIDTH to size the padding, and the only thing it
+	 * reserves for a marker heading is edge DEPTH, which comes from the
+	 * font size and not from this at all.
 	 */
 	const CHAR_WIDTH      = 0.6;
 	const CHAR_WIDTH_BOLD = 0.68;

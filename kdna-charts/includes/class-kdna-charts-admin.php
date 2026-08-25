@@ -433,6 +433,7 @@ class KDNA_Charts_Admin {
 		return array(
 			self::MENU_SLUG_ADD_NEW,
 			KDNA_Charts_Import::MENU_SLUG,
+			KDNA_Charts_Style_Admin::MENU_SLUG,
 		);
 	}
 

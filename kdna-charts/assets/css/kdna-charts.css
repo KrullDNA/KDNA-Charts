@@ -13,12 +13,19 @@
  * palette automatically, because an unset property falls through to
  * the fallback written here.
  *
- * The cascade, from Stage 9 onward:
+ * The cascade:
  *
- *   this stylesheet's fallbacks
+ *   this stylesheet's --auto layer
  *     -> global styling page
  *       -> per chart overrides
  *         -> Elementor widget controls
+ *
+ * Each layer beyond the first writes --kdna-chart-X onto the wrapper as
+ * an inline custom property; the layers merge before they are written,
+ * so there is one value per property by the time it reaches the markup.
+ * How --auto, --kdna-chart-X and --_kdna-chart-X relate is set out in
+ * full at the resolution layer below, and it is worth reading before
+ * changing anything here: the three names are not interchangeable.
  *
  * ── A note on units ────────────────────────────────────────────────
  *
@@ -43,80 +50,80 @@
 
 .kdna-chart {
 	/* Frame */
-	--kdna-chart-background: transparent;
-	--kdna-chart-max-width: 100%;
-	--kdna-chart-margin-block: 2rem;
-	--kdna-chart-padding: 0;
-	--kdna-chart-radius: 0;
-	--kdna-chart-border-width: 0;
-	--kdna-chart-border-colour: transparent;
+	--kdna-chart-background--auto: transparent;
+	--kdna-chart-max-width--auto: 100%;
+	--kdna-chart-margin-block--auto: 2rem;
+	--kdna-chart-padding--auto: 0;
+	--kdna-chart-radius--auto: 0;
+	--kdna-chart-border-width--auto: 0;
+	--kdna-chart-border-colour--auto: transparent;
 
 	/* Typography, shared */
-	--kdna-chart-font-family: inherit;
+	--kdna-chart-font-family--auto: inherit;
 
 	/* Series, by emphasis */
-	--kdna-chart-series-strong: #14332c;
-	--kdna-chart-series-normal: #4a5f58;
-	--kdna-chart-series-muted: #9aa8a3;
+	--kdna-chart-series-strong--auto: #14332c;
+	--kdna-chart-series-normal--auto: #4a5f58;
+	--kdna-chart-series-muted--auto: #9aa8a3;
 
-	--kdna-chart-line-width-strong: 3.5px;
-	--kdna-chart-line-width-normal: 2.5px;
-	--kdna-chart-line-width-muted: 2px;
+	--kdna-chart-line-width-strong--auto: 3.5px;
+	--kdna-chart-line-width-normal--auto: 2.5px;
+	--kdna-chart-line-width-muted--auto: 2px;
 
-	--kdna-chart-dash-dashed: 14px 10px;
-	--kdna-chart-dash-dotted: 0.1px 9px;
+	--kdna-chart-dash-dashed--auto: 14px 10px;
+	--kdna-chart-dash-dotted--auto: 0.1px 9px;
 
 	/* Area fills */
-	--kdna-chart-area-colour-strong: #14332c;
-	--kdna-chart-area-colour-normal: #4a5f58;
-	--kdna-chart-area-colour-muted: #9aa8a3;
+	--kdna-chart-area-colour-strong--auto: #14332c;
+	--kdna-chart-area-colour-normal--auto: #4a5f58;
+	--kdna-chart-area-colour-muted--auto: #9aa8a3;
 
-	--kdna-chart-area-opacity-top-strong: 0.16;
-	--kdna-chart-area-opacity-bottom-strong: 0;
-	--kdna-chart-area-opacity-top-normal: 0.12;
-	--kdna-chart-area-opacity-bottom-normal: 0;
-	--kdna-chart-area-opacity-top-muted: 0.07;
-	--kdna-chart-area-opacity-bottom-muted: 0;
+	--kdna-chart-area-opacity-top-strong--auto: 0.16;
+	--kdna-chart-area-opacity-bottom-strong--auto: 0;
+	--kdna-chart-area-opacity-top-normal--auto: 0.12;
+	--kdna-chart-area-opacity-bottom-normal--auto: 0;
+	--kdna-chart-area-opacity-top-muted--auto: 0.07;
+	--kdna-chart-area-opacity-bottom-muted--auto: 0;
 
 	/* Gridlines */
-	--kdna-chart-gridline-colour: #d5ddd9;
-	--kdna-chart-gridline-colour-strong: #9aa8a3;
-	--kdna-chart-gridline-colour-muted: #e4e9e7;
-	--kdna-chart-gridline-width: 1.5px;
-	--kdna-chart-gridline-width-strong: 2px;
-	--kdna-chart-gridline-dash-dashed: 10px 8px;
-	--kdna-chart-gridline-dash-dotted: 2px 8px;
+	--kdna-chart-gridline-colour--auto: #d5ddd9;
+	--kdna-chart-gridline-colour-strong--auto: #9aa8a3;
+	--kdna-chart-gridline-colour-muted--auto: #e4e9e7;
+	--kdna-chart-gridline-width--auto: 1.5px;
+	--kdna-chart-gridline-width-strong--auto: 2px;
+	--kdna-chart-gridline-dash-dashed--auto: 10px 8px;
+	--kdna-chart-gridline-dash-dotted--auto: 2px 8px;
 
 	/* Axis tick labels */
-	--kdna-chart-axis-label-size: 18px;
-	--kdna-chart-axis-label-weight: 400;
-	--kdna-chart-axis-label-weight-strong: 600;
-	--kdna-chart-axis-label-colour: #4a5f58;
-	--kdna-chart-axis-label-colour-strong: #14332c;
-	--kdna-chart-axis-label-colour-muted: #a8b3af;
-	--kdna-chart-axis-label-letter-spacing: 0;
+	--kdna-chart-axis-label-size--auto: 18px;
+	--kdna-chart-axis-label-weight--auto: 400;
+	--kdna-chart-axis-label-weight-strong--auto: 600;
+	--kdna-chart-axis-label-colour--auto: #4a5f58;
+	--kdna-chart-axis-label-colour-strong--auto: #14332c;
+	--kdna-chart-axis-label-colour-muted--auto: #a8b3af;
+	--kdna-chart-axis-label-letter-spacing--auto: 0;
 
 	/* Axis titles */
-	--kdna-chart-axis-title-size: 18px;
-	--kdna-chart-axis-title-weight: 600;
-	--kdna-chart-axis-title-colour: #6b7a75;
-	--kdna-chart-axis-title-letter-spacing: 0.06em;
-	--kdna-chart-axis-title-transform: uppercase;
+	--kdna-chart-axis-title-size--auto: 18px;
+	--kdna-chart-axis-title-weight--auto: 600;
+	--kdna-chart-axis-title-colour--auto: #6b7a75;
+	--kdna-chart-axis-title-letter-spacing--auto: 0.06em;
+	--kdna-chart-axis-title-transform--auto: uppercase;
 
 	/* Caption */
-	--kdna-chart-caption-size: 1rem;
-	--kdna-chart-caption-weight: 400;
-	--kdna-chart-caption-colour: #4a5f58;
-	--kdna-chart-caption-align: left;
-	--kdna-chart-caption-margin: 0.75rem 0 0;
-	--kdna-chart-caption-line-height: 1.5;
+	--kdna-chart-caption-size--auto: 1rem;
+	--kdna-chart-caption-weight--auto: 400;
+	--kdna-chart-caption-colour--auto: #4a5f58;
+	--kdna-chart-caption-align--auto: left;
+	--kdna-chart-caption-margin--auto: 0.75rem 0 0;
+	--kdna-chart-caption-line-height--auto: 1.5;
 
 	/* Source line */
-	--kdna-chart-source-size: 0.8125rem;
-	--kdna-chart-source-weight: 400;
-	--kdna-chart-source-colour: #8a968f;
-	--kdna-chart-source-align: left;
-	--kdna-chart-source-margin: 0.5rem 0 0;
+	--kdna-chart-source-size--auto: 0.8125rem;
+	--kdna-chart-source-weight--auto: 400;
+	--kdna-chart-source-colour--auto: #8a968f;
+	--kdna-chart-source-align--auto: left;
+	--kdna-chart-source-margin--auto: 0.5rem 0 0;
 
 	/*
 	 * Series tones, for charts with more than one series.
@@ -126,110 +133,483 @@
 	 * degrees of the same thing. A site that needs distinct hues sets
 	 * these six and gets them.
 	 */
-	--kdna-chart-series-colour-1: #14332c;
-	--kdna-chart-series-colour-2: #3d5f55;
-	--kdna-chart-series-colour-3: #6b8b80;
-	--kdna-chart-series-colour-4: #9db3ab;
-	--kdna-chart-series-colour-5: #c3d2cc;
-	--kdna-chart-series-colour-6: #e2e9e6;
+	--kdna-chart-series-colour-1--auto: #14332c;
+	--kdna-chart-series-colour-2--auto: #3d5f55;
+	--kdna-chart-series-colour-3--auto: #6b8b80;
+	--kdna-chart-series-colour-4--auto: #9db3ab;
+	--kdna-chart-series-colour-5--auto: #c3d2cc;
+	--kdna-chart-series-colour-6--auto: #e2e9e6;
 
 	/* Bars and columns */
-	--kdna-chart-bar-colour-strong: #14332c;
-	--kdna-chart-bar-colour-normal: #4a5f58;
-	--kdna-chart-bar-colour-muted: #b6c2bd;
-	--kdna-chart-bar-opacity: 1;
-	--kdna-chart-bar-stroke-colour: transparent;
-	--kdna-chart-bar-stroke-width: 0;
+	--kdna-chart-bar-colour-strong--auto: #14332c;
+	--kdna-chart-bar-colour-normal--auto: #4a5f58;
+	--kdna-chart-bar-colour-muted--auto: #b6c2bd;
+	--kdna-chart-bar-opacity--auto: 1;
+	--kdna-chart-bar-stroke-colour--auto: transparent;
+	--kdna-chart-bar-stroke-width--auto: 0;
 
 	/* Value labels printed on or beside a bar */
-	--kdna-chart-value-label-size: 20px;
-	--kdna-chart-value-label-weight: 600;
-	--kdna-chart-value-label-colour: #14332c;
-	--kdna-chart-value-label-colour-inside: #fff;
+	--kdna-chart-value-label-size--auto: 20px;
+	--kdna-chart-value-label-weight--auto: 600;
+	--kdna-chart-value-label-colour--auto: #14332c;
+	--kdna-chart-value-label-colour-inside--auto: #fff;
 
 	/* Pie and donut */
-	--kdna-chart-segment-stroke-colour: transparent;
-	--kdna-chart-segment-stroke-width: 0;
-	--kdna-chart-segment-label-size: 20px;
-	--kdna-chart-segment-label-weight: 600;
-	--kdna-chart-segment-label-colour: #14332c;
-	--kdna-chart-segment-label-colour-inside: #fff;
-	--kdna-chart-segment-centre-size: 64px;
-	--kdna-chart-segment-centre-weight: 700;
-	--kdna-chart-segment-centre-colour: #14332c;
-	--kdna-chart-segment-leader-colour: #9aa8a3;
-	--kdna-chart-segment-leader-width: 1.5px;
+	--kdna-chart-segment-stroke-colour--auto: transparent;
+	--kdna-chart-segment-stroke-width--auto: 0;
+	--kdna-chart-segment-label-size--auto: 20px;
+	--kdna-chart-segment-label-weight--auto: 600;
+	--kdna-chart-segment-label-colour--auto: #14332c;
+	--kdna-chart-segment-label-colour-inside--auto: #fff;
+	--kdna-chart-segment-centre-size--auto: 64px;
+	--kdna-chart-segment-centre-weight--auto: 700;
+	--kdna-chart-segment-centre-colour--auto: #14332c;
+	--kdna-chart-segment-leader-colour--auto: #9aa8a3;
+	--kdna-chart-segment-leader-width--auto: 1.5px;
 
 	/* Legend */
-	--kdna-chart-legend-label-size: 20px;
-	--kdna-chart-legend-label-weight: 400;
-	--kdna-chart-legend-label-colour: #4a5f58;
+	--kdna-chart-legend-label-size--auto: 20px;
+	--kdna-chart-legend-label-weight--auto: 400;
+	--kdna-chart-legend-label-colour--auto: #4a5f58;
 
 	/* Stat blocks */
-	--kdna-chart-stat-gap: 2rem;
-	--kdna-chart-stat-number-size: clamp( 2.4rem, 6vw, 3.6rem );
-	--kdna-chart-stat-number-weight: 700;
-	--kdna-chart-stat-number-colour: #14332c;
-	--kdna-chart-stat-number-leading: 1;
-	--kdna-chart-stat-number-tracking: -0.03em;
-	--kdna-chart-stat-suffix-size: 0.5em;
-	--kdna-chart-stat-suffix-weight: 600;
-	--kdna-chart-stat-suffix-colour: #6b7a75;
-	--kdna-chart-stat-label-size: 0.9375rem;
-	--kdna-chart-stat-label-weight: 500;
-	--kdna-chart-stat-label-colour: #6b7a75;
-	--kdna-chart-stat-label-tracking: 0.02em;
-	--kdna-chart-stat-rule-width: 0;
-	--kdna-chart-stat-rule-colour: #d5ddd9;
-	--kdna-chart-stat-padding: 0;
+	--kdna-chart-stat-gap--auto: 2rem;
+	--kdna-chart-stat-number-size--auto: clamp( 2.4rem, 6vw, 3.6rem );
+	--kdna-chart-stat-number-weight--auto: 700;
+	--kdna-chart-stat-number-colour--auto: #14332c;
+	--kdna-chart-stat-number-leading--auto: 1;
+	--kdna-chart-stat-number-tracking--auto: -0.03em;
+	--kdna-chart-stat-suffix-size--auto: 0.5em;
+	--kdna-chart-stat-suffix-weight--auto: 600;
+	--kdna-chart-stat-suffix-colour--auto: #6b7a75;
+	--kdna-chart-stat-label-size--auto: 0.9375rem;
+	--kdna-chart-stat-label-weight--auto: 500;
+	--kdna-chart-stat-label-colour--auto: #6b7a75;
+	--kdna-chart-stat-label-tracking--auto: 0.02em;
+	--kdna-chart-stat-rule-width--auto: 0;
+	--kdna-chart-stat-rule-colour--auto: #d5ddd9;
+	--kdna-chart-stat-padding--auto: 0;
 
 	/* Markers */
-	--kdna-chart-marker-colour: #6b7a75;
-	--kdna-chart-marker-width: 2px;
-	--kdna-chart-marker-dash-dashed: 10px 8px;
-	--kdna-chart-marker-dash-dotted: 2px 8px;
-	--kdna-chart-marker-label-size: 20px;
-	--kdna-chart-marker-label-weight: 600;
-	--kdna-chart-marker-label-colour: #14332c;
-	--kdna-chart-marker-label-letter-spacing: 0.04em;
-	--kdna-chart-marker-label-transform: none;
+	--kdna-chart-marker-colour--auto: #6b7a75;
+	--kdna-chart-marker-width--auto: 2px;
+	--kdna-chart-marker-dash-dashed--auto: 10px 8px;
+	--kdna-chart-marker-dash-dotted--auto: 2px 8px;
+	--kdna-chart-marker-label-size--auto: 20px;
+	--kdna-chart-marker-label-weight--auto: 600;
+	--kdna-chart-marker-label-colour--auto: #14332c;
+	--kdna-chart-marker-label-letter-spacing--auto: 0.04em;
+	--kdna-chart-marker-label-transform--auto: none;
 
 	/* Emphasised data points */
-	--kdna-chart-point-radius: 9px;
-	--kdna-chart-point-colour: #14332c;
-	--kdna-chart-point-fill-hollow: #fff;
-	--kdna-chart-point-stroke-width: 3.5px;
-	--kdna-chart-point-label-size: 20px;
-	--kdna-chart-point-label-weight: 500;
-	--kdna-chart-point-label-colour: #4a5f58;
+	--kdna-chart-point-radius--auto: 9px;
+	--kdna-chart-point-colour--auto: #14332c;
+	--kdna-chart-point-fill-hollow--auto: #fff;
+	--kdna-chart-point-stroke-width--auto: 3.5px;
+	--kdna-chart-point-label-size--auto: 20px;
+	--kdna-chart-point-label-weight--auto: 500;
+	--kdna-chart-point-label-colour--auto: #4a5f58;
 
 	/* Callouts */
-	--kdna-chart-callout-value-size-large: 56px;
-	--kdna-chart-callout-value-size-small: 34px;
-	--kdna-chart-callout-value-weight: 700;
-	--kdna-chart-callout-value-colour: #14332c;
-	--kdna-chart-callout-value-letter-spacing: -0.02em;
-	--kdna-chart-callout-caption-size: 20px;
-	--kdna-chart-callout-caption-weight: 400;
-	--kdna-chart-callout-caption-colour: #6b7a75;
+	--kdna-chart-callout-value-size-large--auto: 56px;
+	--kdna-chart-callout-value-size-small--auto: 34px;
+	--kdna-chart-callout-value-weight--auto: 700;
+	--kdna-chart-callout-value-colour--auto: #14332c;
+	--kdna-chart-callout-value-letter-spacing--auto: -0.02em;
+	--kdna-chart-callout-caption-size--auto: 20px;
+	--kdna-chart-callout-caption-weight--auto: 400;
+	--kdna-chart-callout-caption-colour--auto: #6b7a75;
 
 	/* Leader lines and span brackets */
-	--kdna-chart-leader-colour: #9aa8a3;
-	--kdna-chart-leader-width: 1.75px;
-	--kdna-chart-leader-dash: none;
-	--kdna-chart-bracket-colour: #9aa8a3;
-	--kdna-chart-bracket-width: 1.75px;
+	--kdna-chart-leader-colour--auto: #9aa8a3;
+	--kdna-chart-leader-width--auto: 1.75px;
+	--kdna-chart-leader-dash--auto: none;
+	--kdna-chart-bracket-colour--auto: #9aa8a3;
+	--kdna-chart-bracket-width--auto: 1.75px;
 
 	/* Notes */
-	--kdna-chart-note-size: 20px;
-	--kdna-chart-note-weight: 400;
-	--kdna-chart-note-colour: #8a968f;
-	--kdna-chart-note-style: italic;
+	--kdna-chart-note-size--auto: 20px;
+	--kdna-chart-note-weight--auto: 400;
+	--kdna-chart-note-colour--auto: #8a968f;
+	--kdna-chart-note-style--auto: italic;
 
 	/* Placeholder, editors only */
-	--kdna-chart-placeholder-background: #f6f7f7;
-	--kdna-chart-placeholder-border: #dcdcde;
-	--kdna-chart-placeholder-colour: #50575e;
+	--kdna-chart-placeholder-background--auto: #f6f7f7;
+	--kdna-chart-placeholder-border--auto: #dcdcde;
+	--kdna-chart-placeholder-colour--auto: #50575e;
+
+	/* Frame border, split into longhands so a four-sided width control
+	   and a style control can each own a property of their own. */
+	--kdna-chart-border-style--auto: solid;
+
+	/* Horizontal margin, which is how alignment is expressed once a
+	   maximum width makes alignment mean anything. */
+	--kdna-chart-margin-inline--auto: 0;
+
+	/* Plot area: the rectangle the data is drawn inside. Transparent and
+	   unstroked by default, so a chart that says nothing about it draws
+	   nothing extra. */
+	--kdna-chart-plot-background--auto: transparent;
+	--kdna-chart-plot-border-colour--auto: transparent;
+	--kdna-chart-plot-border-width--auto: 0;
+	--kdna-chart-plot-radius--auto: 0;
+
+	/* Caption, the rest of its typography. */
+	--kdna-chart-caption-family--auto: inherit;
+	--kdna-chart-caption-letter-spacing--auto: normal;
+	--kdna-chart-caption-transform--auto: none;
+	--kdna-chart-caption-style--auto: normal;
+
+	/* Source line, the rest of its typography. */
+	--kdna-chart-source-family--auto: inherit;
+	--kdna-chart-source-line-height--auto: 1.5;
+	--kdna-chart-source-letter-spacing--auto: normal;
+	--kdna-chart-source-transform--auto: none;
+	--kdna-chart-source-style--auto: normal;
+}
+
+/* ---------------------------------------------------------------------
+ * The resolution layer
+ *
+ * Generated from KDNA_Charts_Style_Schema, and checked against it by
+ * tests/test-style.php. Do not hand-edit an entry here: change the
+ * schema and regenerate, or the two will disagree and the disagreement
+ * will be silent.
+ *
+ * Three names per token, doing three different jobs:
+ *
+ *   --kdna-chart-X--auto   the plugin's own value. Always set, in the
+ *                          block above, and adjusted by the narrow-chart
+ *                          rules at the bottom of this file.
+ *   --kdna-chart-X         what somebody set: the style engine writes it
+ *                          onto the wrapper as an inline property, and a
+ *                          theme can set it in a stylesheet. Unset by
+ *                          default, which is what makes the --auto layer
+ *                          reachable.
+ *   --_kdna-chart-X        what the rules below actually read.
+ *
+ * ── Why the indirection is not optional ───────────────────────────────
+ *
+ * An inline style attribute beats every stylesheet rule, media query or
+ * not. So if the style engine wrote --kdna-chart-axis-label-size
+ * directly and the rules read it directly, then the moment anybody set
+ * an axis label size the narrow-chart rules at the bottom of this file
+ * would stop working, at every width, silently, with the labels
+ * shrinking away to nothing on a phone. A custom property also cannot
+ * refer to itself, so the narrow rules could not recover the desktop
+ * value either.
+ *
+ * Splitting the name in three fixes both. The rules read --_X, which is
+ * resolved here from a set value if there is one and from the --auto
+ * layer if there is not, and the narrow rules move --auto, which no
+ * inline attribute ever writes.
+ *
+ * ── Responsive properties ─────────────────────────────────────────────
+ *
+ * A responsive control writes up to three properties: the base name for
+ * desktop, then the same name suffixed -tablet and -mobile. A breakpoint
+ * left unset emits NOTHING rather than an empty value, because the
+ * chains below only fall through on a property that is not there.
+ * Writing "--x-tablet: ;" would resolve to empty instead of falling
+ * through, which is the whole reason the resolver omits rather than
+ * blanks.
+ *
+ * Mobile falls back to tablet before desktop, so a value set once for
+ * tablet holds on a phone too. That is what "tablet and below" means to
+ * everyone who has used a page builder, and it is the behaviour that
+ * makes setting one value instead of two the common case.
+ *
+ * ── Why both selectors ────────────────────────────────────────────────
+ *
+ * An element cannot be its own container, so the container queries at
+ * the bottom of this file set --auto on .kdna-chart__frame rather than
+ * on the block. A custom property is substituted using the values
+ * computed ON THE ELEMENT THAT DECLARES IT, so the frame has to resolve
+ * its own --_ layer or a container-scoped --auto would never be read.
+ * The caption and the source line sit outside the frame and inherit the
+ * block's, which is right: they are not scaled by a viewBox.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart,
+.kdna-chart__frame {
+	--_kdna-chart-background: var( --kdna-chart-background, var( --kdna-chart-background--auto ) );
+	--_kdna-chart-max-width: var( --kdna-chart-max-width, var( --kdna-chart-max-width--auto ) );
+	--_kdna-chart-margin-inline: var( --kdna-chart-margin-inline, var( --kdna-chart-margin-inline--auto ) );
+	--_kdna-chart-margin-block: var( --kdna-chart-margin-block, var( --kdna-chart-margin-block--auto ) );
+	--_kdna-chart-padding: var( --kdna-chart-padding, var( --kdna-chart-padding--auto ) );
+	--_kdna-chart-radius: var( --kdna-chart-radius, var( --kdna-chart-radius--auto ) );
+	--_kdna-chart-border-style: var( --kdna-chart-border-style, var( --kdna-chart-border-style--auto ) );
+	--_kdna-chart-border-width: var( --kdna-chart-border-width, var( --kdna-chart-border-width--auto ) );
+	--_kdna-chart-border-colour: var( --kdna-chart-border-colour, var( --kdna-chart-border-colour--auto ) );
+	--_kdna-chart-font-family: var( --kdna-chart-font-family, var( --kdna-chart-font-family--auto ) );
+	--_kdna-chart-caption-size: var( --kdna-chart-caption-size, var( --kdna-chart-caption-size--auto ) );
+	--_kdna-chart-caption-weight: var( --kdna-chart-caption-weight, var( --kdna-chart-caption-weight--auto ) );
+	--_kdna-chart-caption-colour: var( --kdna-chart-caption-colour, var( --kdna-chart-caption-colour--auto ) );
+	--_kdna-chart-caption-align: var( --kdna-chart-caption-align, var( --kdna-chart-caption-align--auto ) );
+	--_kdna-chart-caption-margin: var( --kdna-chart-caption-margin, var( --kdna-chart-caption-margin--auto ) );
+	--_kdna-chart-caption-line-height: var( --kdna-chart-caption-line-height, var( --kdna-chart-caption-line-height--auto ) );
+	--_kdna-chart-caption-letter-spacing: var( --kdna-chart-caption-letter-spacing, var( --kdna-chart-caption-letter-spacing--auto ) );
+	--_kdna-chart-caption-transform: var( --kdna-chart-caption-transform, var( --kdna-chart-caption-transform--auto ) );
+	--_kdna-chart-caption-style: var( --kdna-chart-caption-style, var( --kdna-chart-caption-style--auto ) );
+	--_kdna-chart-caption-family: var( --kdna-chart-caption-family, var( --kdna-chart-caption-family--auto ) );
+	--_kdna-chart-plot-background: var( --kdna-chart-plot-background, var( --kdna-chart-plot-background--auto ) );
+	--_kdna-chart-plot-border-colour: var( --kdna-chart-plot-border-colour, var( --kdna-chart-plot-border-colour--auto ) );
+	--_kdna-chart-plot-border-width: var( --kdna-chart-plot-border-width, var( --kdna-chart-plot-border-width--auto ) );
+	--_kdna-chart-plot-radius: var( --kdna-chart-plot-radius, var( --kdna-chart-plot-radius--auto ) );
+	--_kdna-chart-gridline-colour: var( --kdna-chart-gridline-colour, var( --kdna-chart-gridline-colour--auto ) );
+	--_kdna-chart-gridline-colour-strong: var( --kdna-chart-gridline-colour-strong, var( --kdna-chart-gridline-colour-strong--auto ) );
+	--_kdna-chart-gridline-colour-muted: var( --kdna-chart-gridline-colour-muted, var( --kdna-chart-gridline-colour-muted--auto ) );
+	--_kdna-chart-gridline-width: var( --kdna-chart-gridline-width, var( --kdna-chart-gridline-width--auto ) );
+	--_kdna-chart-gridline-width-strong: var( --kdna-chart-gridline-width-strong, var( --kdna-chart-gridline-width-strong--auto ) );
+	--_kdna-chart-gridline-dash-dashed: var( --kdna-chart-gridline-dash-dashed, var( --kdna-chart-gridline-dash-dashed--auto ) );
+	--_kdna-chart-gridline-dash-dotted: var( --kdna-chart-gridline-dash-dotted, var( --kdna-chart-gridline-dash-dotted--auto ) );
+	--_kdna-chart-axis-label-size: var( --kdna-chart-axis-label-size, var( --kdna-chart-axis-label-size--auto ) );
+	--_kdna-chart-axis-label-weight: var( --kdna-chart-axis-label-weight, var( --kdna-chart-axis-label-weight--auto ) );
+	--_kdna-chart-axis-label-weight-strong: var( --kdna-chart-axis-label-weight-strong, var( --kdna-chart-axis-label-weight-strong--auto ) );
+	--_kdna-chart-axis-label-colour: var( --kdna-chart-axis-label-colour, var( --kdna-chart-axis-label-colour--auto ) );
+	--_kdna-chart-axis-label-colour-strong: var( --kdna-chart-axis-label-colour-strong, var( --kdna-chart-axis-label-colour-strong--auto ) );
+	--_kdna-chart-axis-label-colour-muted: var( --kdna-chart-axis-label-colour-muted, var( --kdna-chart-axis-label-colour-muted--auto ) );
+	--_kdna-chart-axis-label-letter-spacing: var( --kdna-chart-axis-label-letter-spacing, var( --kdna-chart-axis-label-letter-spacing--auto ) );
+	--_kdna-chart-axis-title-size: var( --kdna-chart-axis-title-size, var( --kdna-chart-axis-title-size--auto ) );
+	--_kdna-chart-axis-title-weight: var( --kdna-chart-axis-title-weight, var( --kdna-chart-axis-title-weight--auto ) );
+	--_kdna-chart-axis-title-colour: var( --kdna-chart-axis-title-colour, var( --kdna-chart-axis-title-colour--auto ) );
+	--_kdna-chart-axis-title-letter-spacing: var( --kdna-chart-axis-title-letter-spacing, var( --kdna-chart-axis-title-letter-spacing--auto ) );
+	--_kdna-chart-axis-title-transform: var( --kdna-chart-axis-title-transform, var( --kdna-chart-axis-title-transform--auto ) );
+	--_kdna-chart-series-strong: var( --kdna-chart-series-strong, var( --kdna-chart-series-strong--auto ) );
+	--_kdna-chart-series-normal: var( --kdna-chart-series-normal, var( --kdna-chart-series-normal--auto ) );
+	--_kdna-chart-series-muted: var( --kdna-chart-series-muted, var( --kdna-chart-series-muted--auto ) );
+	--_kdna-chart-line-width-strong: var( --kdna-chart-line-width-strong, var( --kdna-chart-line-width-strong--auto ) );
+	--_kdna-chart-line-width-normal: var( --kdna-chart-line-width-normal, var( --kdna-chart-line-width-normal--auto ) );
+	--_kdna-chart-line-width-muted: var( --kdna-chart-line-width-muted, var( --kdna-chart-line-width-muted--auto ) );
+	--_kdna-chart-dash-dashed: var( --kdna-chart-dash-dashed, var( --kdna-chart-dash-dashed--auto ) );
+	--_kdna-chart-dash-dotted: var( --kdna-chart-dash-dotted, var( --kdna-chart-dash-dotted--auto ) );
+	--_kdna-chart-series-colour-1: var( --kdna-chart-series-colour-1, var( --kdna-chart-series-colour-1--auto ) );
+	--_kdna-chart-series-colour-2: var( --kdna-chart-series-colour-2, var( --kdna-chart-series-colour-2--auto ) );
+	--_kdna-chart-series-colour-3: var( --kdna-chart-series-colour-3, var( --kdna-chart-series-colour-3--auto ) );
+	--_kdna-chart-series-colour-4: var( --kdna-chart-series-colour-4, var( --kdna-chart-series-colour-4--auto ) );
+	--_kdna-chart-series-colour-5: var( --kdna-chart-series-colour-5, var( --kdna-chart-series-colour-5--auto ) );
+	--_kdna-chart-series-colour-6: var( --kdna-chart-series-colour-6, var( --kdna-chart-series-colour-6--auto ) );
+	--_kdna-chart-area-colour-strong: var( --kdna-chart-area-colour-strong, var( --kdna-chart-area-colour-strong--auto ) );
+	--_kdna-chart-area-opacity-top-strong: var( --kdna-chart-area-opacity-top-strong, var( --kdna-chart-area-opacity-top-strong--auto ) );
+	--_kdna-chart-area-opacity-bottom-strong: var( --kdna-chart-area-opacity-bottom-strong, var( --kdna-chart-area-opacity-bottom-strong--auto ) );
+	--_kdna-chart-area-colour-normal: var( --kdna-chart-area-colour-normal, var( --kdna-chart-area-colour-normal--auto ) );
+	--_kdna-chart-area-opacity-top-normal: var( --kdna-chart-area-opacity-top-normal, var( --kdna-chart-area-opacity-top-normal--auto ) );
+	--_kdna-chart-area-opacity-bottom-normal: var( --kdna-chart-area-opacity-bottom-normal, var( --kdna-chart-area-opacity-bottom-normal--auto ) );
+	--_kdna-chart-area-colour-muted: var( --kdna-chart-area-colour-muted, var( --kdna-chart-area-colour-muted--auto ) );
+	--_kdna-chart-area-opacity-top-muted: var( --kdna-chart-area-opacity-top-muted, var( --kdna-chart-area-opacity-top-muted--auto ) );
+	--_kdna-chart-area-opacity-bottom-muted: var( --kdna-chart-area-opacity-bottom-muted, var( --kdna-chart-area-opacity-bottom-muted--auto ) );
+	--_kdna-chart-bar-colour-strong: var( --kdna-chart-bar-colour-strong, var( --kdna-chart-bar-colour-strong--auto ) );
+	--_kdna-chart-bar-colour-normal: var( --kdna-chart-bar-colour-normal, var( --kdna-chart-bar-colour-normal--auto ) );
+	--_kdna-chart-bar-colour-muted: var( --kdna-chart-bar-colour-muted, var( --kdna-chart-bar-colour-muted--auto ) );
+	--_kdna-chart-bar-opacity: var( --kdna-chart-bar-opacity, var( --kdna-chart-bar-opacity--auto ) );
+	--_kdna-chart-bar-stroke-colour: var( --kdna-chart-bar-stroke-colour, var( --kdna-chart-bar-stroke-colour--auto ) );
+	--_kdna-chart-bar-stroke-width: var( --kdna-chart-bar-stroke-width, var( --kdna-chart-bar-stroke-width--auto ) );
+	--_kdna-chart-value-label-size: var( --kdna-chart-value-label-size, var( --kdna-chart-value-label-size--auto ) );
+	--_kdna-chart-value-label-weight: var( --kdna-chart-value-label-weight, var( --kdna-chart-value-label-weight--auto ) );
+	--_kdna-chart-value-label-colour: var( --kdna-chart-value-label-colour, var( --kdna-chart-value-label-colour--auto ) );
+	--_kdna-chart-value-label-colour-inside: var( --kdna-chart-value-label-colour-inside, var( --kdna-chart-value-label-colour-inside--auto ) );
+	--_kdna-chart-segment-stroke-colour: var( --kdna-chart-segment-stroke-colour, var( --kdna-chart-segment-stroke-colour--auto ) );
+	--_kdna-chart-segment-stroke-width: var( --kdna-chart-segment-stroke-width, var( --kdna-chart-segment-stroke-width--auto ) );
+	--_kdna-chart-segment-label-size: var( --kdna-chart-segment-label-size, var( --kdna-chart-segment-label-size--auto ) );
+	--_kdna-chart-segment-label-weight: var( --kdna-chart-segment-label-weight, var( --kdna-chart-segment-label-weight--auto ) );
+	--_kdna-chart-segment-label-colour: var( --kdna-chart-segment-label-colour, var( --kdna-chart-segment-label-colour--auto ) );
+	--_kdna-chart-segment-label-colour-inside: var( --kdna-chart-segment-label-colour-inside, var( --kdna-chart-segment-label-colour-inside--auto ) );
+	--_kdna-chart-segment-centre-size: var( --kdna-chart-segment-centre-size, var( --kdna-chart-segment-centre-size--auto ) );
+	--_kdna-chart-segment-centre-weight: var( --kdna-chart-segment-centre-weight, var( --kdna-chart-segment-centre-weight--auto ) );
+	--_kdna-chart-segment-centre-colour: var( --kdna-chart-segment-centre-colour, var( --kdna-chart-segment-centre-colour--auto ) );
+	--_kdna-chart-segment-leader-colour: var( --kdna-chart-segment-leader-colour, var( --kdna-chart-segment-leader-colour--auto ) );
+	--_kdna-chart-segment-leader-width: var( --kdna-chart-segment-leader-width, var( --kdna-chart-segment-leader-width--auto ) );
+	--_kdna-chart-point-radius: var( --kdna-chart-point-radius, var( --kdna-chart-point-radius--auto ) );
+	--_kdna-chart-point-colour: var( --kdna-chart-point-colour, var( --kdna-chart-point-colour--auto ) );
+	--_kdna-chart-point-fill-hollow: var( --kdna-chart-point-fill-hollow, var( --kdna-chart-point-fill-hollow--auto ) );
+	--_kdna-chart-point-stroke-width: var( --kdna-chart-point-stroke-width, var( --kdna-chart-point-stroke-width--auto ) );
+	--_kdna-chart-point-label-size: var( --kdna-chart-point-label-size, var( --kdna-chart-point-label-size--auto ) );
+	--_kdna-chart-point-label-weight: var( --kdna-chart-point-label-weight, var( --kdna-chart-point-label-weight--auto ) );
+	--_kdna-chart-point-label-colour: var( --kdna-chart-point-label-colour, var( --kdna-chart-point-label-colour--auto ) );
+	--_kdna-chart-marker-colour: var( --kdna-chart-marker-colour, var( --kdna-chart-marker-colour--auto ) );
+	--_kdna-chart-marker-width: var( --kdna-chart-marker-width, var( --kdna-chart-marker-width--auto ) );
+	--_kdna-chart-marker-dash-dashed: var( --kdna-chart-marker-dash-dashed, var( --kdna-chart-marker-dash-dashed--auto ) );
+	--_kdna-chart-marker-dash-dotted: var( --kdna-chart-marker-dash-dotted, var( --kdna-chart-marker-dash-dotted--auto ) );
+	--_kdna-chart-marker-label-size: var( --kdna-chart-marker-label-size, var( --kdna-chart-marker-label-size--auto ) );
+	--_kdna-chart-marker-label-weight: var( --kdna-chart-marker-label-weight, var( --kdna-chart-marker-label-weight--auto ) );
+	--_kdna-chart-marker-label-colour: var( --kdna-chart-marker-label-colour, var( --kdna-chart-marker-label-colour--auto ) );
+	--_kdna-chart-marker-label-letter-spacing: var( --kdna-chart-marker-label-letter-spacing, var( --kdna-chart-marker-label-letter-spacing--auto ) );
+	--_kdna-chart-marker-label-transform: var( --kdna-chart-marker-label-transform, var( --kdna-chart-marker-label-transform--auto ) );
+	--_kdna-chart-callout-value-size-large: var( --kdna-chart-callout-value-size-large, var( --kdna-chart-callout-value-size-large--auto ) );
+	--_kdna-chart-callout-value-size-small: var( --kdna-chart-callout-value-size-small, var( --kdna-chart-callout-value-size-small--auto ) );
+	--_kdna-chart-callout-value-weight: var( --kdna-chart-callout-value-weight, var( --kdna-chart-callout-value-weight--auto ) );
+	--_kdna-chart-callout-value-colour: var( --kdna-chart-callout-value-colour, var( --kdna-chart-callout-value-colour--auto ) );
+	--_kdna-chart-callout-value-letter-spacing: var( --kdna-chart-callout-value-letter-spacing, var( --kdna-chart-callout-value-letter-spacing--auto ) );
+	--_kdna-chart-callout-caption-size: var( --kdna-chart-callout-caption-size, var( --kdna-chart-callout-caption-size--auto ) );
+	--_kdna-chart-callout-caption-weight: var( --kdna-chart-callout-caption-weight, var( --kdna-chart-callout-caption-weight--auto ) );
+	--_kdna-chart-callout-caption-colour: var( --kdna-chart-callout-caption-colour, var( --kdna-chart-callout-caption-colour--auto ) );
+	--_kdna-chart-leader-colour: var( --kdna-chart-leader-colour, var( --kdna-chart-leader-colour--auto ) );
+	--_kdna-chart-leader-width: var( --kdna-chart-leader-width, var( --kdna-chart-leader-width--auto ) );
+	--_kdna-chart-leader-dash: var( --kdna-chart-leader-dash, var( --kdna-chart-leader-dash--auto ) );
+	--_kdna-chart-bracket-colour: var( --kdna-chart-bracket-colour, var( --kdna-chart-bracket-colour--auto ) );
+	--_kdna-chart-bracket-width: var( --kdna-chart-bracket-width, var( --kdna-chart-bracket-width--auto ) );
+	--_kdna-chart-note-size: var( --kdna-chart-note-size, var( --kdna-chart-note-size--auto ) );
+	--_kdna-chart-note-weight: var( --kdna-chart-note-weight, var( --kdna-chart-note-weight--auto ) );
+	--_kdna-chart-note-colour: var( --kdna-chart-note-colour, var( --kdna-chart-note-colour--auto ) );
+	--_kdna-chart-note-style: var( --kdna-chart-note-style, var( --kdna-chart-note-style--auto ) );
+	--_kdna-chart-legend-label-size: var( --kdna-chart-legend-label-size, var( --kdna-chart-legend-label-size--auto ) );
+	--_kdna-chart-legend-label-weight: var( --kdna-chart-legend-label-weight, var( --kdna-chart-legend-label-weight--auto ) );
+	--_kdna-chart-legend-label-colour: var( --kdna-chart-legend-label-colour, var( --kdna-chart-legend-label-colour--auto ) );
+	--_kdna-chart-source-size: var( --kdna-chart-source-size, var( --kdna-chart-source-size--auto ) );
+	--_kdna-chart-source-weight: var( --kdna-chart-source-weight, var( --kdna-chart-source-weight--auto ) );
+	--_kdna-chart-source-colour: var( --kdna-chart-source-colour, var( --kdna-chart-source-colour--auto ) );
+	--_kdna-chart-source-align: var( --kdna-chart-source-align, var( --kdna-chart-source-align--auto ) );
+	--_kdna-chart-source-margin: var( --kdna-chart-source-margin, var( --kdna-chart-source-margin--auto ) );
+	--_kdna-chart-source-line-height: var( --kdna-chart-source-line-height, var( --kdna-chart-source-line-height--auto ) );
+	--_kdna-chart-source-letter-spacing: var( --kdna-chart-source-letter-spacing, var( --kdna-chart-source-letter-spacing--auto ) );
+	--_kdna-chart-source-transform: var( --kdna-chart-source-transform, var( --kdna-chart-source-transform--auto ) );
+	--_kdna-chart-source-style: var( --kdna-chart-source-style, var( --kdna-chart-source-style--auto ) );
+	--_kdna-chart-source-family: var( --kdna-chart-source-family, var( --kdna-chart-source-family--auto ) );
+	--_kdna-chart-stat-gap: var( --kdna-chart-stat-gap, var( --kdna-chart-stat-gap--auto ) );
+	--_kdna-chart-stat-padding: var( --kdna-chart-stat-padding, var( --kdna-chart-stat-padding--auto ) );
+	--_kdna-chart-stat-number-size: var( --kdna-chart-stat-number-size, var( --kdna-chart-stat-number-size--auto ) );
+	--_kdna-chart-stat-number-weight: var( --kdna-chart-stat-number-weight, var( --kdna-chart-stat-number-weight--auto ) );
+	--_kdna-chart-stat-number-colour: var( --kdna-chart-stat-number-colour, var( --kdna-chart-stat-number-colour--auto ) );
+	--_kdna-chart-stat-number-leading: var( --kdna-chart-stat-number-leading, var( --kdna-chart-stat-number-leading--auto ) );
+	--_kdna-chart-stat-number-tracking: var( --kdna-chart-stat-number-tracking, var( --kdna-chart-stat-number-tracking--auto ) );
+	--_kdna-chart-stat-suffix-size: var( --kdna-chart-stat-suffix-size, var( --kdna-chart-stat-suffix-size--auto ) );
+	--_kdna-chart-stat-suffix-weight: var( --kdna-chart-stat-suffix-weight, var( --kdna-chart-stat-suffix-weight--auto ) );
+	--_kdna-chart-stat-suffix-colour: var( --kdna-chart-stat-suffix-colour, var( --kdna-chart-stat-suffix-colour--auto ) );
+	--_kdna-chart-stat-label-size: var( --kdna-chart-stat-label-size, var( --kdna-chart-stat-label-size--auto ) );
+	--_kdna-chart-stat-label-weight: var( --kdna-chart-stat-label-weight, var( --kdna-chart-stat-label-weight--auto ) );
+	--_kdna-chart-stat-label-colour: var( --kdna-chart-stat-label-colour, var( --kdna-chart-stat-label-colour--auto ) );
+	--_kdna-chart-stat-label-tracking: var( --kdna-chart-stat-label-tracking, var( --kdna-chart-stat-label-tracking--auto ) );
+	--_kdna-chart-stat-rule-width: var( --kdna-chart-stat-rule-width, var( --kdna-chart-stat-rule-width--auto ) );
+	--_kdna-chart-stat-rule-colour: var( --kdna-chart-stat-rule-colour, var( --kdna-chart-stat-rule-colour--auto ) );
+	--_kdna-chart-placeholder-background: var( --kdna-chart-placeholder-background, var( --kdna-chart-placeholder-background--auto ) );
+	--_kdna-chart-placeholder-border: var( --kdna-chart-placeholder-border, var( --kdna-chart-placeholder-border--auto ) );
+	--_kdna-chart-placeholder-colour: var( --kdna-chart-placeholder-colour, var( --kdna-chart-placeholder-colour--auto ) );
+}
+
+@media ( max-width: 1024px ) {
+
+	.kdna-chart,
+	.kdna-chart__frame {
+		--_kdna-chart-max-width: var( --kdna-chart-max-width-tablet, var( --kdna-chart-max-width, var( --kdna-chart-max-width--auto ) ) );
+		--_kdna-chart-margin-inline: var( --kdna-chart-margin-inline-tablet, var( --kdna-chart-margin-inline, var( --kdna-chart-margin-inline--auto ) ) );
+		--_kdna-chart-margin-block: var( --kdna-chart-margin-block-tablet, var( --kdna-chart-margin-block, var( --kdna-chart-margin-block--auto ) ) );
+		--_kdna-chart-padding: var( --kdna-chart-padding-tablet, var( --kdna-chart-padding, var( --kdna-chart-padding--auto ) ) );
+		--_kdna-chart-radius: var( --kdna-chart-radius-tablet, var( --kdna-chart-radius, var( --kdna-chart-radius--auto ) ) );
+		--_kdna-chart-border-width: var( --kdna-chart-border-width-tablet, var( --kdna-chart-border-width, var( --kdna-chart-border-width--auto ) ) );
+		--_kdna-chart-caption-size: var( --kdna-chart-caption-size-tablet, var( --kdna-chart-caption-size, var( --kdna-chart-caption-size--auto ) ) );
+		--_kdna-chart-caption-align: var( --kdna-chart-caption-align-tablet, var( --kdna-chart-caption-align, var( --kdna-chart-caption-align--auto ) ) );
+		--_kdna-chart-caption-margin: var( --kdna-chart-caption-margin-tablet, var( --kdna-chart-caption-margin, var( --kdna-chart-caption-margin--auto ) ) );
+		--_kdna-chart-caption-line-height: var( --kdna-chart-caption-line-height-tablet, var( --kdna-chart-caption-line-height, var( --kdna-chart-caption-line-height--auto ) ) );
+		--_kdna-chart-caption-letter-spacing: var( --kdna-chart-caption-letter-spacing-tablet, var( --kdna-chart-caption-letter-spacing, var( --kdna-chart-caption-letter-spacing--auto ) ) );
+		--_kdna-chart-plot-border-width: var( --kdna-chart-plot-border-width-tablet, var( --kdna-chart-plot-border-width, var( --kdna-chart-plot-border-width--auto ) ) );
+		--_kdna-chart-plot-radius: var( --kdna-chart-plot-radius-tablet, var( --kdna-chart-plot-radius, var( --kdna-chart-plot-radius--auto ) ) );
+		--_kdna-chart-gridline-width: var( --kdna-chart-gridline-width-tablet, var( --kdna-chart-gridline-width, var( --kdna-chart-gridline-width--auto ) ) );
+		--_kdna-chart-gridline-width-strong: var( --kdna-chart-gridline-width-strong-tablet, var( --kdna-chart-gridline-width-strong, var( --kdna-chart-gridline-width-strong--auto ) ) );
+		--_kdna-chart-axis-label-size: var( --kdna-chart-axis-label-size-tablet, var( --kdna-chart-axis-label-size, var( --kdna-chart-axis-label-size--auto ) ) );
+		--_kdna-chart-axis-label-letter-spacing: var( --kdna-chart-axis-label-letter-spacing-tablet, var( --kdna-chart-axis-label-letter-spacing, var( --kdna-chart-axis-label-letter-spacing--auto ) ) );
+		--_kdna-chart-axis-title-size: var( --kdna-chart-axis-title-size-tablet, var( --kdna-chart-axis-title-size, var( --kdna-chart-axis-title-size--auto ) ) );
+		--_kdna-chart-axis-title-letter-spacing: var( --kdna-chart-axis-title-letter-spacing-tablet, var( --kdna-chart-axis-title-letter-spacing, var( --kdna-chart-axis-title-letter-spacing--auto ) ) );
+		--_kdna-chart-line-width-strong: var( --kdna-chart-line-width-strong-tablet, var( --kdna-chart-line-width-strong, var( --kdna-chart-line-width-strong--auto ) ) );
+		--_kdna-chart-line-width-normal: var( --kdna-chart-line-width-normal-tablet, var( --kdna-chart-line-width-normal, var( --kdna-chart-line-width-normal--auto ) ) );
+		--_kdna-chart-line-width-muted: var( --kdna-chart-line-width-muted-tablet, var( --kdna-chart-line-width-muted, var( --kdna-chart-line-width-muted--auto ) ) );
+		--_kdna-chart-bar-stroke-width: var( --kdna-chart-bar-stroke-width-tablet, var( --kdna-chart-bar-stroke-width, var( --kdna-chart-bar-stroke-width--auto ) ) );
+		--_kdna-chart-value-label-size: var( --kdna-chart-value-label-size-tablet, var( --kdna-chart-value-label-size, var( --kdna-chart-value-label-size--auto ) ) );
+		--_kdna-chart-segment-stroke-width: var( --kdna-chart-segment-stroke-width-tablet, var( --kdna-chart-segment-stroke-width, var( --kdna-chart-segment-stroke-width--auto ) ) );
+		--_kdna-chart-segment-label-size: var( --kdna-chart-segment-label-size-tablet, var( --kdna-chart-segment-label-size, var( --kdna-chart-segment-label-size--auto ) ) );
+		--_kdna-chart-segment-centre-size: var( --kdna-chart-segment-centre-size-tablet, var( --kdna-chart-segment-centre-size, var( --kdna-chart-segment-centre-size--auto ) ) );
+		--_kdna-chart-segment-leader-width: var( --kdna-chart-segment-leader-width-tablet, var( --kdna-chart-segment-leader-width, var( --kdna-chart-segment-leader-width--auto ) ) );
+		--_kdna-chart-point-radius: var( --kdna-chart-point-radius-tablet, var( --kdna-chart-point-radius, var( --kdna-chart-point-radius--auto ) ) );
+		--_kdna-chart-point-stroke-width: var( --kdna-chart-point-stroke-width-tablet, var( --kdna-chart-point-stroke-width, var( --kdna-chart-point-stroke-width--auto ) ) );
+		--_kdna-chart-point-label-size: var( --kdna-chart-point-label-size-tablet, var( --kdna-chart-point-label-size, var( --kdna-chart-point-label-size--auto ) ) );
+		--_kdna-chart-marker-width: var( --kdna-chart-marker-width-tablet, var( --kdna-chart-marker-width, var( --kdna-chart-marker-width--auto ) ) );
+		--_kdna-chart-marker-label-size: var( --kdna-chart-marker-label-size-tablet, var( --kdna-chart-marker-label-size, var( --kdna-chart-marker-label-size--auto ) ) );
+		--_kdna-chart-marker-label-letter-spacing: var( --kdna-chart-marker-label-letter-spacing-tablet, var( --kdna-chart-marker-label-letter-spacing, var( --kdna-chart-marker-label-letter-spacing--auto ) ) );
+		--_kdna-chart-callout-value-size-large: var( --kdna-chart-callout-value-size-large-tablet, var( --kdna-chart-callout-value-size-large, var( --kdna-chart-callout-value-size-large--auto ) ) );
+		--_kdna-chart-callout-value-size-small: var( --kdna-chart-callout-value-size-small-tablet, var( --kdna-chart-callout-value-size-small, var( --kdna-chart-callout-value-size-small--auto ) ) );
+		--_kdna-chart-callout-value-letter-spacing: var( --kdna-chart-callout-value-letter-spacing-tablet, var( --kdna-chart-callout-value-letter-spacing, var( --kdna-chart-callout-value-letter-spacing--auto ) ) );
+		--_kdna-chart-callout-caption-size: var( --kdna-chart-callout-caption-size-tablet, var( --kdna-chart-callout-caption-size, var( --kdna-chart-callout-caption-size--auto ) ) );
+		--_kdna-chart-leader-width: var( --kdna-chart-leader-width-tablet, var( --kdna-chart-leader-width, var( --kdna-chart-leader-width--auto ) ) );
+		--_kdna-chart-bracket-width: var( --kdna-chart-bracket-width-tablet, var( --kdna-chart-bracket-width, var( --kdna-chart-bracket-width--auto ) ) );
+		--_kdna-chart-note-size: var( --kdna-chart-note-size-tablet, var( --kdna-chart-note-size, var( --kdna-chart-note-size--auto ) ) );
+		--_kdna-chart-legend-label-size: var( --kdna-chart-legend-label-size-tablet, var( --kdna-chart-legend-label-size, var( --kdna-chart-legend-label-size--auto ) ) );
+		--_kdna-chart-source-size: var( --kdna-chart-source-size-tablet, var( --kdna-chart-source-size, var( --kdna-chart-source-size--auto ) ) );
+		--_kdna-chart-source-align: var( --kdna-chart-source-align-tablet, var( --kdna-chart-source-align, var( --kdna-chart-source-align--auto ) ) );
+		--_kdna-chart-source-margin: var( --kdna-chart-source-margin-tablet, var( --kdna-chart-source-margin, var( --kdna-chart-source-margin--auto ) ) );
+		--_kdna-chart-source-line-height: var( --kdna-chart-source-line-height-tablet, var( --kdna-chart-source-line-height, var( --kdna-chart-source-line-height--auto ) ) );
+		--_kdna-chart-source-letter-spacing: var( --kdna-chart-source-letter-spacing-tablet, var( --kdna-chart-source-letter-spacing, var( --kdna-chart-source-letter-spacing--auto ) ) );
+		--_kdna-chart-stat-gap: var( --kdna-chart-stat-gap-tablet, var( --kdna-chart-stat-gap, var( --kdna-chart-stat-gap--auto ) ) );
+		--_kdna-chart-stat-padding: var( --kdna-chart-stat-padding-tablet, var( --kdna-chart-stat-padding, var( --kdna-chart-stat-padding--auto ) ) );
+		--_kdna-chart-stat-number-size: var( --kdna-chart-stat-number-size-tablet, var( --kdna-chart-stat-number-size, var( --kdna-chart-stat-number-size--auto ) ) );
+		--_kdna-chart-stat-number-leading: var( --kdna-chart-stat-number-leading-tablet, var( --kdna-chart-stat-number-leading, var( --kdna-chart-stat-number-leading--auto ) ) );
+		--_kdna-chart-stat-number-tracking: var( --kdna-chart-stat-number-tracking-tablet, var( --kdna-chart-stat-number-tracking, var( --kdna-chart-stat-number-tracking--auto ) ) );
+		--_kdna-chart-stat-suffix-size: var( --kdna-chart-stat-suffix-size-tablet, var( --kdna-chart-stat-suffix-size, var( --kdna-chart-stat-suffix-size--auto ) ) );
+		--_kdna-chart-stat-label-size: var( --kdna-chart-stat-label-size-tablet, var( --kdna-chart-stat-label-size, var( --kdna-chart-stat-label-size--auto ) ) );
+		--_kdna-chart-stat-label-tracking: var( --kdna-chart-stat-label-tracking-tablet, var( --kdna-chart-stat-label-tracking, var( --kdna-chart-stat-label-tracking--auto ) ) );
+		--_kdna-chart-stat-rule-width: var( --kdna-chart-stat-rule-width-tablet, var( --kdna-chart-stat-rule-width, var( --kdna-chart-stat-rule-width--auto ) ) );
+	}
+}
+
+@media ( max-width: 767px ) {
+
+	.kdna-chart,
+	.kdna-chart__frame {
+		--_kdna-chart-max-width: var( --kdna-chart-max-width-mobile, var( --kdna-chart-max-width-tablet, var( --kdna-chart-max-width, var( --kdna-chart-max-width--auto ) ) ) );
+		--_kdna-chart-margin-inline: var( --kdna-chart-margin-inline-mobile, var( --kdna-chart-margin-inline-tablet, var( --kdna-chart-margin-inline, var( --kdna-chart-margin-inline--auto ) ) ) );
+		--_kdna-chart-margin-block: var( --kdna-chart-margin-block-mobile, var( --kdna-chart-margin-block-tablet, var( --kdna-chart-margin-block, var( --kdna-chart-margin-block--auto ) ) ) );
+		--_kdna-chart-padding: var( --kdna-chart-padding-mobile, var( --kdna-chart-padding-tablet, var( --kdna-chart-padding, var( --kdna-chart-padding--auto ) ) ) );
+		--_kdna-chart-radius: var( --kdna-chart-radius-mobile, var( --kdna-chart-radius-tablet, var( --kdna-chart-radius, var( --kdna-chart-radius--auto ) ) ) );
+		--_kdna-chart-border-width: var( --kdna-chart-border-width-mobile, var( --kdna-chart-border-width-tablet, var( --kdna-chart-border-width, var( --kdna-chart-border-width--auto ) ) ) );
+		--_kdna-chart-caption-size: var( --kdna-chart-caption-size-mobile, var( --kdna-chart-caption-size-tablet, var( --kdna-chart-caption-size, var( --kdna-chart-caption-size--auto ) ) ) );
+		--_kdna-chart-caption-align: var( --kdna-chart-caption-align-mobile, var( --kdna-chart-caption-align-tablet, var( --kdna-chart-caption-align, var( --kdna-chart-caption-align--auto ) ) ) );
+		--_kdna-chart-caption-margin: var( --kdna-chart-caption-margin-mobile, var( --kdna-chart-caption-margin-tablet, var( --kdna-chart-caption-margin, var( --kdna-chart-caption-margin--auto ) ) ) );
+		--_kdna-chart-caption-line-height: var( --kdna-chart-caption-line-height-mobile, var( --kdna-chart-caption-line-height-tablet, var( --kdna-chart-caption-line-height, var( --kdna-chart-caption-line-height--auto ) ) ) );
+		--_kdna-chart-caption-letter-spacing: var( --kdna-chart-caption-letter-spacing-mobile, var( --kdna-chart-caption-letter-spacing-tablet, var( --kdna-chart-caption-letter-spacing, var( --kdna-chart-caption-letter-spacing--auto ) ) ) );
+		--_kdna-chart-plot-border-width: var( --kdna-chart-plot-border-width-mobile, var( --kdna-chart-plot-border-width-tablet, var( --kdna-chart-plot-border-width, var( --kdna-chart-plot-border-width--auto ) ) ) );
+		--_kdna-chart-plot-radius: var( --kdna-chart-plot-radius-mobile, var( --kdna-chart-plot-radius-tablet, var( --kdna-chart-plot-radius, var( --kdna-chart-plot-radius--auto ) ) ) );
+		--_kdna-chart-gridline-width: var( --kdna-chart-gridline-width-mobile, var( --kdna-chart-gridline-width-tablet, var( --kdna-chart-gridline-width, var( --kdna-chart-gridline-width--auto ) ) ) );
+		--_kdna-chart-gridline-width-strong: var( --kdna-chart-gridline-width-strong-mobile, var( --kdna-chart-gridline-width-strong-tablet, var( --kdna-chart-gridline-width-strong, var( --kdna-chart-gridline-width-strong--auto ) ) ) );
+		--_kdna-chart-axis-label-size: var( --kdna-chart-axis-label-size-mobile, var( --kdna-chart-axis-label-size-tablet, var( --kdna-chart-axis-label-size, var( --kdna-chart-axis-label-size--auto ) ) ) );
+		--_kdna-chart-axis-label-letter-spacing: var( --kdna-chart-axis-label-letter-spacing-mobile, var( --kdna-chart-axis-label-letter-spacing-tablet, var( --kdna-chart-axis-label-letter-spacing, var( --kdna-chart-axis-label-letter-spacing--auto ) ) ) );
+		--_kdna-chart-axis-title-size: var( --kdna-chart-axis-title-size-mobile, var( --kdna-chart-axis-title-size-tablet, var( --kdna-chart-axis-title-size, var( --kdna-chart-axis-title-size--auto ) ) ) );
+		--_kdna-chart-axis-title-letter-spacing: var( --kdna-chart-axis-title-letter-spacing-mobile, var( --kdna-chart-axis-title-letter-spacing-tablet, var( --kdna-chart-axis-title-letter-spacing, var( --kdna-chart-axis-title-letter-spacing--auto ) ) ) );
+		--_kdna-chart-line-width-strong: var( --kdna-chart-line-width-strong-mobile, var( --kdna-chart-line-width-strong-tablet, var( --kdna-chart-line-width-strong, var( --kdna-chart-line-width-strong--auto ) ) ) );
+		--_kdna-chart-line-width-normal: var( --kdna-chart-line-width-normal-mobile, var( --kdna-chart-line-width-normal-tablet, var( --kdna-chart-line-width-normal, var( --kdna-chart-line-width-normal--auto ) ) ) );
+		--_kdna-chart-line-width-muted: var( --kdna-chart-line-width-muted-mobile, var( --kdna-chart-line-width-muted-tablet, var( --kdna-chart-line-width-muted, var( --kdna-chart-line-width-muted--auto ) ) ) );
+		--_kdna-chart-bar-stroke-width: var( --kdna-chart-bar-stroke-width-mobile, var( --kdna-chart-bar-stroke-width-tablet, var( --kdna-chart-bar-stroke-width, var( --kdna-chart-bar-stroke-width--auto ) ) ) );
+		--_kdna-chart-value-label-size: var( --kdna-chart-value-label-size-mobile, var( --kdna-chart-value-label-size-tablet, var( --kdna-chart-value-label-size, var( --kdna-chart-value-label-size--auto ) ) ) );
+		--_kdna-chart-segment-stroke-width: var( --kdna-chart-segment-stroke-width-mobile, var( --kdna-chart-segment-stroke-width-tablet, var( --kdna-chart-segment-stroke-width, var( --kdna-chart-segment-stroke-width--auto ) ) ) );
+		--_kdna-chart-segment-label-size: var( --kdna-chart-segment-label-size-mobile, var( --kdna-chart-segment-label-size-tablet, var( --kdna-chart-segment-label-size, var( --kdna-chart-segment-label-size--auto ) ) ) );
+		--_kdna-chart-segment-centre-size: var( --kdna-chart-segment-centre-size-mobile, var( --kdna-chart-segment-centre-size-tablet, var( --kdna-chart-segment-centre-size, var( --kdna-chart-segment-centre-size--auto ) ) ) );
+		--_kdna-chart-segment-leader-width: var( --kdna-chart-segment-leader-width-mobile, var( --kdna-chart-segment-leader-width-tablet, var( --kdna-chart-segment-leader-width, var( --kdna-chart-segment-leader-width--auto ) ) ) );
+		--_kdna-chart-point-radius: var( --kdna-chart-point-radius-mobile, var( --kdna-chart-point-radius-tablet, var( --kdna-chart-point-radius, var( --kdna-chart-point-radius--auto ) ) ) );
+		--_kdna-chart-point-stroke-width: var( --kdna-chart-point-stroke-width-mobile, var( --kdna-chart-point-stroke-width-tablet, var( --kdna-chart-point-stroke-width, var( --kdna-chart-point-stroke-width--auto ) ) ) );
+		--_kdna-chart-point-label-size: var( --kdna-chart-point-label-size-mobile, var( --kdna-chart-point-label-size-tablet, var( --kdna-chart-point-label-size, var( --kdna-chart-point-label-size--auto ) ) ) );
+		--_kdna-chart-marker-width: var( --kdna-chart-marker-width-mobile, var( --kdna-chart-marker-width-tablet, var( --kdna-chart-marker-width, var( --kdna-chart-marker-width--auto ) ) ) );
+		--_kdna-chart-marker-label-size: var( --kdna-chart-marker-label-size-mobile, var( --kdna-chart-marker-label-size-tablet, var( --kdna-chart-marker-label-size, var( --kdna-chart-marker-label-size--auto ) ) ) );
+		--_kdna-chart-marker-label-letter-spacing: var( --kdna-chart-marker-label-letter-spacing-mobile, var( --kdna-chart-marker-label-letter-spacing-tablet, var( --kdna-chart-marker-label-letter-spacing, var( --kdna-chart-marker-label-letter-spacing--auto ) ) ) );
+		--_kdna-chart-callout-value-size-large: var( --kdna-chart-callout-value-size-large-mobile, var( --kdna-chart-callout-value-size-large-tablet, var( --kdna-chart-callout-value-size-large, var( --kdna-chart-callout-value-size-large--auto ) ) ) );
+		--_kdna-chart-callout-value-size-small: var( --kdna-chart-callout-value-size-small-mobile, var( --kdna-chart-callout-value-size-small-tablet, var( --kdna-chart-callout-value-size-small, var( --kdna-chart-callout-value-size-small--auto ) ) ) );
+		--_kdna-chart-callout-value-letter-spacing: var( --kdna-chart-callout-value-letter-spacing-mobile, var( --kdna-chart-callout-value-letter-spacing-tablet, var( --kdna-chart-callout-value-letter-spacing, var( --kdna-chart-callout-value-letter-spacing--auto ) ) ) );
+		--_kdna-chart-callout-caption-size: var( --kdna-chart-callout-caption-size-mobile, var( --kdna-chart-callout-caption-size-tablet, var( --kdna-chart-callout-caption-size, var( --kdna-chart-callout-caption-size--auto ) ) ) );
+		--_kdna-chart-leader-width: var( --kdna-chart-leader-width-mobile, var( --kdna-chart-leader-width-tablet, var( --kdna-chart-leader-width, var( --kdna-chart-leader-width--auto ) ) ) );
+		--_kdna-chart-bracket-width: var( --kdna-chart-bracket-width-mobile, var( --kdna-chart-bracket-width-tablet, var( --kdna-chart-bracket-width, var( --kdna-chart-bracket-width--auto ) ) ) );
+		--_kdna-chart-note-size: var( --kdna-chart-note-size-mobile, var( --kdna-chart-note-size-tablet, var( --kdna-chart-note-size, var( --kdna-chart-note-size--auto ) ) ) );
+		--_kdna-chart-legend-label-size: var( --kdna-chart-legend-label-size-mobile, var( --kdna-chart-legend-label-size-tablet, var( --kdna-chart-legend-label-size, var( --kdna-chart-legend-label-size--auto ) ) ) );
+		--_kdna-chart-source-size: var( --kdna-chart-source-size-mobile, var( --kdna-chart-source-size-tablet, var( --kdna-chart-source-size, var( --kdna-chart-source-size--auto ) ) ) );
+		--_kdna-chart-source-align: var( --kdna-chart-source-align-mobile, var( --kdna-chart-source-align-tablet, var( --kdna-chart-source-align, var( --kdna-chart-source-align--auto ) ) ) );
+		--_kdna-chart-source-margin: var( --kdna-chart-source-margin-mobile, var( --kdna-chart-source-margin-tablet, var( --kdna-chart-source-margin, var( --kdna-chart-source-margin--auto ) ) ) );
+		--_kdna-chart-source-line-height: var( --kdna-chart-source-line-height-mobile, var( --kdna-chart-source-line-height-tablet, var( --kdna-chart-source-line-height, var( --kdna-chart-source-line-height--auto ) ) ) );
+		--_kdna-chart-source-letter-spacing: var( --kdna-chart-source-letter-spacing-mobile, var( --kdna-chart-source-letter-spacing-tablet, var( --kdna-chart-source-letter-spacing, var( --kdna-chart-source-letter-spacing--auto ) ) ) );
+		--_kdna-chart-stat-gap: var( --kdna-chart-stat-gap-mobile, var( --kdna-chart-stat-gap-tablet, var( --kdna-chart-stat-gap, var( --kdna-chart-stat-gap--auto ) ) ) );
+		--_kdna-chart-stat-padding: var( --kdna-chart-stat-padding-mobile, var( --kdna-chart-stat-padding-tablet, var( --kdna-chart-stat-padding, var( --kdna-chart-stat-padding--auto ) ) ) );
+		--_kdna-chart-stat-number-size: var( --kdna-chart-stat-number-size-mobile, var( --kdna-chart-stat-number-size-tablet, var( --kdna-chart-stat-number-size, var( --kdna-chart-stat-number-size--auto ) ) ) );
+		--_kdna-chart-stat-number-leading: var( --kdna-chart-stat-number-leading-mobile, var( --kdna-chart-stat-number-leading-tablet, var( --kdna-chart-stat-number-leading, var( --kdna-chart-stat-number-leading--auto ) ) ) );
+		--_kdna-chart-stat-number-tracking: var( --kdna-chart-stat-number-tracking-mobile, var( --kdna-chart-stat-number-tracking-tablet, var( --kdna-chart-stat-number-tracking, var( --kdna-chart-stat-number-tracking--auto ) ) ) );
+		--_kdna-chart-stat-suffix-size: var( --kdna-chart-stat-suffix-size-mobile, var( --kdna-chart-stat-suffix-size-tablet, var( --kdna-chart-stat-suffix-size, var( --kdna-chart-stat-suffix-size--auto ) ) ) );
+		--_kdna-chart-stat-label-size: var( --kdna-chart-stat-label-size-mobile, var( --kdna-chart-stat-label-size-tablet, var( --kdna-chart-stat-label-size, var( --kdna-chart-stat-label-size--auto ) ) ) );
+		--_kdna-chart-stat-label-tracking: var( --kdna-chart-stat-label-tracking-mobile, var( --kdna-chart-stat-label-tracking-tablet, var( --kdna-chart-stat-label-tracking, var( --kdna-chart-stat-label-tracking--auto ) ) ) );
+		--_kdna-chart-stat-rule-width: var( --kdna-chart-stat-rule-width-mobile, var( --kdna-chart-stat-rule-width-tablet, var( --kdna-chart-stat-rule-width, var( --kdna-chart-stat-rule-width--auto ) ) ) );
+	}
 }
 
 /* ---------------------------------------------------------------------
@@ -238,14 +618,23 @@
 
 .kdna-chart {
 	display: block;
-	max-width: var( --kdna-chart-max-width, 100% );
-	margin-block: var( --kdna-chart-margin-block, 2rem );
-	margin-inline: 0;
-	padding: var( --kdna-chart-padding, 0 );
-	background: var( --kdna-chart-background, transparent );
-	border: var( --kdna-chart-border-width, 0 ) solid var( --kdna-chart-border-colour, transparent );
-	border-radius: var( --kdna-chart-radius, 0 );
-	font-family: var( --kdna-chart-font-family, inherit );
+	max-width: var( --_kdna-chart-max-width );
+	margin-block: var( --_kdna-chart-margin-block );
+	margin-inline: var( --_kdna-chart-margin-inline );
+	padding: var( --_kdna-chart-padding );
+	background: var( --_kdna-chart-background );
+	/*
+	 * Longhands, not the border shorthand. The shorthand would need all
+	 * three values in one declaration, and the width is a four-sided
+	 * control while the style and colour are single values, so writing
+	 * them together would mean one control could not move without the
+	 * other two being restated.
+	 */
+	border-width: var( --_kdna-chart-border-width );
+	border-style: var( --_kdna-chart-border-style );
+	border-color: var( --_kdna-chart-border-colour );
+	border-radius: var( --_kdna-chart-radius );
+	font-family: var( --_kdna-chart-font-family );
 }
 
 .kdna-chart__frame {
@@ -278,25 +667,48 @@
 }
 
 /* ---------------------------------------------------------------------
+ * Plot area
+ *
+ * The rectangle the data is drawn inside. The renderer emits it on every
+ * chart that has a plot, always, and it paints nothing until somebody
+ * gives it a colour: a chart with a tinted plot area is a common
+ * editorial treatment, and there is no way to add the rectangle later
+ * from CSS alone.
+ *
+ * Its geometry is the scale engine's plot rect and is not stylable. The
+ * padding around it is computed in PHP from the width of the longest
+ * tick label, so moving the rectangle from CSS would move the frame
+ * without moving the labels that were measured against it.
+ * ------------------------------------------------------------------ */
+
+.kdna-chart__plot-area {
+	fill: var( --_kdna-chart-plot-background );
+	stroke: var( --_kdna-chart-plot-border-colour );
+	stroke-width: var( --_kdna-chart-plot-border-width );
+	rx: var( --_kdna-chart-plot-radius );
+	ry: var( --_kdna-chart-plot-radius );
+}
+
+/* ---------------------------------------------------------------------
  * Series lines
  * ------------------------------------------------------------------ */
 
 .kdna-chart__line {
 	fill: none;
-	stroke: var( --kdna-chart-series-normal, #4a5f58 );
-	stroke-width: var( --kdna-chart-line-width-normal, 2.5px );
+	stroke: var( --_kdna-chart-series-normal );
+	stroke-width: var( --_kdna-chart-line-width-normal );
 	stroke-linejoin: round;
 	stroke-linecap: round;
 }
 
 .kdna-chart__line--strong {
-	stroke: var( --kdna-chart-series-strong, #14332c );
-	stroke-width: var( --kdna-chart-line-width-strong, 3.5px );
+	stroke: var( --_kdna-chart-series-strong );
+	stroke-width: var( --_kdna-chart-line-width-strong );
 }
 
 .kdna-chart__line--muted {
-	stroke: var( --kdna-chart-series-muted, #9aa8a3 );
-	stroke-width: var( --kdna-chart-line-width-muted, 2px );
+	stroke: var( --_kdna-chart-series-muted );
+	stroke-width: var( --_kdna-chart-line-width-muted );
 }
 
 /*
@@ -310,7 +722,7 @@
 }
 
 .kdna-chart__line--dashed {
-	stroke-dasharray: var( --kdna-chart-dash-dashed, 14px 10px );
+	stroke-dasharray: var( --_kdna-chart-dash-dashed );
 	stroke-linecap: butt;
 }
 
@@ -320,7 +732,7 @@
  * tenth of a unit.
  */
 .kdna-chart__line--dotted {
-	stroke-dasharray: var( --kdna-chart-dash-dotted, 0.1px 9px );
+	stroke-dasharray: var( --_kdna-chart-dash-dotted );
 	stroke-linecap: round;
 }
 
@@ -337,39 +749,39 @@
 }
 
 .kdna-chart__area-stop--strong {
-	stop-color: var( --kdna-chart-area-colour-strong, #14332c );
+	stop-color: var( --_kdna-chart-area-colour-strong );
 }
 
 .kdna-chart__area-stop--normal {
-	stop-color: var( --kdna-chart-area-colour-normal, #4a5f58 );
+	stop-color: var( --_kdna-chart-area-colour-normal );
 }
 
 .kdna-chart__area-stop--muted {
-	stop-color: var( --kdna-chart-area-colour-muted, #9aa8a3 );
+	stop-color: var( --_kdna-chart-area-colour-muted );
 }
 
 .kdna-chart__area-stop--top.kdna-chart__area-stop--strong {
-	stop-opacity: var( --kdna-chart-area-opacity-top-strong, 0.16 );
+	stop-opacity: var( --_kdna-chart-area-opacity-top-strong );
 }
 
 .kdna-chart__area-stop--bottom.kdna-chart__area-stop--strong {
-	stop-opacity: var( --kdna-chart-area-opacity-bottom-strong, 0 );
+	stop-opacity: var( --_kdna-chart-area-opacity-bottom-strong );
 }
 
 .kdna-chart__area-stop--top.kdna-chart__area-stop--normal {
-	stop-opacity: var( --kdna-chart-area-opacity-top-normal, 0.12 );
+	stop-opacity: var( --_kdna-chart-area-opacity-top-normal );
 }
 
 .kdna-chart__area-stop--bottom.kdna-chart__area-stop--normal {
-	stop-opacity: var( --kdna-chart-area-opacity-bottom-normal, 0 );
+	stop-opacity: var( --_kdna-chart-area-opacity-bottom-normal );
 }
 
 .kdna-chart__area-stop--top.kdna-chart__area-stop--muted {
-	stop-opacity: var( --kdna-chart-area-opacity-top-muted, 0.07 );
+	stop-opacity: var( --_kdna-chart-area-opacity-top-muted );
 }
 
 .kdna-chart__area-stop--bottom.kdna-chart__area-stop--muted {
-	stop-opacity: var( --kdna-chart-area-opacity-bottom-muted, 0 );
+	stop-opacity: var( --_kdna-chart-area-opacity-bottom-muted );
 }
 
 /* ---------------------------------------------------------------------
@@ -378,17 +790,17 @@
 
 .kdna-chart__gridline {
 	fill: none;
-	stroke: var( --kdna-chart-gridline-colour, #d5ddd9 );
-	stroke-width: var( --kdna-chart-gridline-width, 1.5px );
+	stroke: var( --_kdna-chart-gridline-colour );
+	stroke-width: var( --_kdna-chart-gridline-width );
 }
 
 .kdna-chart__gridline--strong {
-	stroke: var( --kdna-chart-gridline-colour-strong, #9aa8a3 );
-	stroke-width: var( --kdna-chart-gridline-width-strong, 2px );
+	stroke: var( --_kdna-chart-gridline-colour-strong );
+	stroke-width: var( --_kdna-chart-gridline-width-strong );
 }
 
 .kdna-chart__gridline--muted {
-	stroke: var( --kdna-chart-gridline-colour-muted, #e4e9e7 );
+	stroke: var( --_kdna-chart-gridline-colour-muted );
 }
 
 .kdna-chart__gridline--solid {
@@ -396,11 +808,11 @@
 }
 
 .kdna-chart__gridline--dashed {
-	stroke-dasharray: var( --kdna-chart-gridline-dash-dashed, 10px 8px );
+	stroke-dasharray: var( --_kdna-chart-gridline-dash-dashed );
 }
 
 .kdna-chart__gridline--dotted {
-	stroke-dasharray: var( --kdna-chart-gridline-dash-dotted, 2px 8px );
+	stroke-dasharray: var( --_kdna-chart-gridline-dash-dotted );
 	stroke-linecap: round;
 }
 
@@ -411,30 +823,30 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart__axis-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-axis-label-size, 18px );
-	font-weight: var( --kdna-chart-axis-label-weight, 400 );
-	letter-spacing: var( --kdna-chart-axis-label-letter-spacing, 0 );
-	fill: var( --kdna-chart-axis-label-colour, #4a5f58 );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-axis-label-size );
+	font-weight: var( --_kdna-chart-axis-label-weight );
+	letter-spacing: var( --_kdna-chart-axis-label-letter-spacing );
+	fill: var( --_kdna-chart-axis-label-colour );
 	font-variant-numeric: tabular-nums;
 }
 
 .kdna-chart__axis-label--strong {
-	font-weight: var( --kdna-chart-axis-label-weight-strong, 600 );
-	fill: var( --kdna-chart-axis-label-colour-strong, #14332c );
+	font-weight: var( --_kdna-chart-axis-label-weight-strong );
+	fill: var( --_kdna-chart-axis-label-colour-strong );
 }
 
 .kdna-chart__axis-label--muted {
-	fill: var( --kdna-chart-axis-label-colour-muted, #a8b3af );
+	fill: var( --_kdna-chart-axis-label-colour-muted );
 }
 
 .kdna-chart__axis-title {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-axis-title-size, 18px );
-	font-weight: var( --kdna-chart-axis-title-weight, 600 );
-	letter-spacing: var( --kdna-chart-axis-title-letter-spacing, 0.06em );
-	text-transform: var( --kdna-chart-axis-title-transform, uppercase );
-	fill: var( --kdna-chart-axis-title-colour, #6b7a75 );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-axis-title-size );
+	font-weight: var( --_kdna-chart-axis-title-weight );
+	letter-spacing: var( --_kdna-chart-axis-title-letter-spacing );
+	text-transform: var( --_kdna-chart-axis-title-transform );
+	fill: var( --_kdna-chart-axis-title-colour );
 }
 
 /* ---------------------------------------------------------------------
@@ -445,10 +857,10 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart__bar {
-	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
-	fill-opacity: var( --kdna-chart-bar-opacity, 1 );
-	stroke: var( --kdna-chart-bar-stroke-colour, transparent );
-	stroke-width: var( --kdna-chart-bar-stroke-width, 0 );
+	fill: var( --_kdna-chart-bar-colour-normal );
+	fill-opacity: var( --_kdna-chart-bar-opacity );
+	stroke: var( --_kdna-chart-bar-stroke-colour );
+	stroke-width: var( --_kdna-chart-bar-stroke-width );
 }
 
 /*
@@ -458,32 +870,32 @@
  * when the definition asked for one, which is what makes that ordering
  * mean anything.
  */
-.kdna-chart__bar--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
-.kdna-chart__bar--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
-.kdna-chart__bar--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
-.kdna-chart__bar--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
-.kdna-chart__bar--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
-.kdna-chart__bar--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+.kdna-chart__bar--series-1 { fill: var( --_kdna-chart-series-colour-1 ); }
+.kdna-chart__bar--series-2 { fill: var( --_kdna-chart-series-colour-2 ); }
+.kdna-chart__bar--series-3 { fill: var( --_kdna-chart-series-colour-3 ); }
+.kdna-chart__bar--series-4 { fill: var( --_kdna-chart-series-colour-4 ); }
+.kdna-chart__bar--series-5 { fill: var( --_kdna-chart-series-colour-5 ); }
+.kdna-chart__bar--series-6 { fill: var( --_kdna-chart-series-colour-6 ); }
 
 .kdna-chart__bar--strong {
-	fill: var( --kdna-chart-bar-colour-strong, #14332c );
+	fill: var( --_kdna-chart-bar-colour-strong );
 }
 
 .kdna-chart__bar--normal {
-	fill: var( --kdna-chart-bar-colour-normal, #4a5f58 );
+	fill: var( --_kdna-chart-bar-colour-normal );
 }
 
 .kdna-chart__bar--muted {
-	fill: var( --kdna-chart-bar-colour-muted, #b6c2bd );
+	fill: var( --_kdna-chart-bar-colour-muted );
 }
 
 
 
 .kdna-chart__value-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-value-label-size, 20px );
-	font-weight: var( --kdna-chart-value-label-weight, 600 );
-	fill: var( --kdna-chart-value-label-colour, #14332c );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-value-label-size );
+	font-weight: var( --_kdna-chart-value-label-weight );
+	fill: var( --_kdna-chart-value-label-colour );
 	font-variant-numeric: tabular-nums;
 }
 
@@ -493,7 +905,7 @@
  * uses this class when the bar was long enough to hold the figure.
  */
 .kdna-chart__value-label--inside {
-	fill: var( --kdna-chart-value-label-colour-inside, #fff );
+	fill: var( --_kdna-chart-value-label-colour-inside );
 }
 
 /*
@@ -502,7 +914,7 @@
  * tone a given bar took.
  */
 .kdna-chart__value-label--pale {
-	fill: var( --kdna-chart-value-label-colour, #14332c );
+	fill: var( --_kdna-chart-value-label-colour );
 }
 
 /* ---------------------------------------------------------------------
@@ -513,27 +925,27 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart__segment {
-	fill: var( --kdna-chart-series-colour-1, #14332c );
-	stroke: var( --kdna-chart-segment-stroke-colour, transparent );
-	stroke-width: var( --kdna-chart-segment-stroke-width, 0 );
+	fill: var( --_kdna-chart-series-colour-1 );
+	stroke: var( --_kdna-chart-segment-stroke-colour );
+	stroke-width: var( --_kdna-chart-segment-stroke-width );
 }
 
-.kdna-chart__segment--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
-.kdna-chart__segment--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
-.kdna-chart__segment--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
-.kdna-chart__segment--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
-.kdna-chart__segment--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
-.kdna-chart__segment--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+.kdna-chart__segment--series-1 { fill: var( --_kdna-chart-series-colour-1 ); }
+.kdna-chart__segment--series-2 { fill: var( --_kdna-chart-series-colour-2 ); }
+.kdna-chart__segment--series-3 { fill: var( --_kdna-chart-series-colour-3 ); }
+.kdna-chart__segment--series-4 { fill: var( --_kdna-chart-series-colour-4 ); }
+.kdna-chart__segment--series-5 { fill: var( --_kdna-chart-series-colour-5 ); }
+.kdna-chart__segment--series-6 { fill: var( --_kdna-chart-series-colour-6 ); }
 
-.kdna-chart__segment--strong { fill: var( --kdna-chart-series-strong, #14332c ); }
-.kdna-chart__segment--normal { fill: var( --kdna-chart-series-normal, #4a5f58 ); }
-.kdna-chart__segment--muted { fill: var( --kdna-chart-series-muted, #9aa8a3 ); }
+.kdna-chart__segment--strong { fill: var( --_kdna-chart-series-strong ); }
+.kdna-chart__segment--normal { fill: var( --_kdna-chart-series-normal ); }
+.kdna-chart__segment--muted { fill: var( --_kdna-chart-series-muted ); }
 
 .kdna-chart__segment-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-segment-label-size, 20px );
-	font-weight: var( --kdna-chart-segment-label-weight, 600 );
-	fill: var( --kdna-chart-segment-label-colour, #14332c );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-segment-label-size );
+	font-weight: var( --_kdna-chart-segment-label-weight );
+	fill: var( --_kdna-chart-segment-label-colour );
 	font-variant-numeric: tabular-nums;
 }
 
@@ -543,13 +955,13 @@
  * The renderer says which tone a segment took, since only it knows.
  */
 .kdna-chart__segment-label--inside {
-	fill: var( --kdna-chart-segment-label-colour-inside, #fff );
+	fill: var( --_kdna-chart-segment-label-colour-inside );
 }
 
 .kdna-chart__segment-label--inside.kdna-chart__segment-label--series-4,
 .kdna-chart__segment-label--inside.kdna-chart__segment-label--series-5,
 .kdna-chart__segment-label--inside.kdna-chart__segment-label--series-6 {
-	fill: var( --kdna-chart-segment-label-colour, #14332c );
+	fill: var( --_kdna-chart-segment-label-colour );
 }
 
 /*
@@ -557,16 +969,16 @@
  * segment, so it keeps the page colour and can afford to be larger.
  */
 .kdna-chart__segment-label--centre {
-	font-size: var( --kdna-chart-segment-centre-size, 64px );
-	font-weight: var( --kdna-chart-segment-centre-weight, 700 );
-	fill: var( --kdna-chart-segment-centre-colour, #14332c );
+	font-size: var( --_kdna-chart-segment-centre-size );
+	font-weight: var( --_kdna-chart-segment-centre-weight );
+	fill: var( --_kdna-chart-segment-centre-colour );
 	letter-spacing: -0.02em;
 }
 
 .kdna-chart__segment-leader {
 	fill: none;
-	stroke: var( --kdna-chart-segment-leader-colour, #9aa8a3 );
-	stroke-width: var( --kdna-chart-segment-leader-width, 1.5px );
+	stroke: var( --_kdna-chart-segment-leader-colour );
+	stroke-width: var( --_kdna-chart-segment-leader-width );
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
@@ -576,25 +988,25 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart__legend-swatch {
-	fill: var( --kdna-chart-series-colour-1, #14332c );
+	fill: var( --_kdna-chart-series-colour-1 );
 }
 
-.kdna-chart__legend-swatch--series-1 { fill: var( --kdna-chart-series-colour-1, #14332c ); }
-.kdna-chart__legend-swatch--series-2 { fill: var( --kdna-chart-series-colour-2, #3d5f55 ); }
-.kdna-chart__legend-swatch--series-3 { fill: var( --kdna-chart-series-colour-3, #6b8b80 ); }
-.kdna-chart__legend-swatch--series-4 { fill: var( --kdna-chart-series-colour-4, #9db3ab ); }
-.kdna-chart__legend-swatch--series-5 { fill: var( --kdna-chart-series-colour-5, #c3d2cc ); }
-.kdna-chart__legend-swatch--series-6 { fill: var( --kdna-chart-series-colour-6, #e2e9e6 ); }
+.kdna-chart__legend-swatch--series-1 { fill: var( --_kdna-chart-series-colour-1 ); }
+.kdna-chart__legend-swatch--series-2 { fill: var( --_kdna-chart-series-colour-2 ); }
+.kdna-chart__legend-swatch--series-3 { fill: var( --_kdna-chart-series-colour-3 ); }
+.kdna-chart__legend-swatch--series-4 { fill: var( --_kdna-chart-series-colour-4 ); }
+.kdna-chart__legend-swatch--series-5 { fill: var( --_kdna-chart-series-colour-5 ); }
+.kdna-chart__legend-swatch--series-6 { fill: var( --_kdna-chart-series-colour-6 ); }
 
-.kdna-chart__legend-swatch--strong { fill: var( --kdna-chart-series-strong, #14332c ); }
-.kdna-chart__legend-swatch--normal { fill: var( --kdna-chart-series-normal, #4a5f58 ); }
-.kdna-chart__legend-swatch--muted { fill: var( --kdna-chart-series-muted, #9aa8a3 ); }
+.kdna-chart__legend-swatch--strong { fill: var( --_kdna-chart-series-strong ); }
+.kdna-chart__legend-swatch--normal { fill: var( --_kdna-chart-series-normal ); }
+.kdna-chart__legend-swatch--muted { fill: var( --_kdna-chart-series-muted ); }
 
 .kdna-chart__legend-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-legend-label-size, 20px );
-	font-weight: var( --kdna-chart-legend-label-weight, 400 );
-	fill: var( --kdna-chart-legend-label-colour, #4a5f58 );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-legend-label-size );
+	font-weight: var( --_kdna-chart-legend-label-weight );
+	fill: var( --_kdna-chart-legend-label-colour );
 }
 
 /* ---------------------------------------------------------------------
@@ -613,7 +1025,7 @@
 .kdna-chart__stats {
 	display: grid;
 	grid-template-columns: repeat( auto-fit, minmax( 8rem, 1fr ) );
-	gap: var( --kdna-chart-stat-gap, 2rem );
+	gap: var( --_kdna-chart-stat-gap );
 	margin: 0;
 }
 
@@ -633,8 +1045,8 @@
 	display: flex;
 	flex-direction: column-reverse;
 	gap: 0.35rem;
-	padding: var( --kdna-chart-stat-padding, 0 );
-	border-left: var( --kdna-chart-stat-rule-width, 0 ) solid var( --kdna-chart-stat-rule-colour, #d5ddd9 );
+	padding: var( --_kdna-chart-stat-padding );
+	border-left: var( --_kdna-chart-stat-rule-width ) solid var( --_kdna-chart-stat-rule-colour );
 }
 
 .kdna-chart__stats--align-centre .kdna-chart__stat { text-align: center; }
@@ -642,11 +1054,11 @@
 
 .kdna-chart__stat-value {
 	margin: 0;
-	font-size: var( --kdna-chart-stat-number-size, clamp( 2.4rem, 6vw, 3.6rem ) );
-	font-weight: var( --kdna-chart-stat-number-weight, 700 );
-	line-height: var( --kdna-chart-stat-number-leading, 1 );
-	letter-spacing: var( --kdna-chart-stat-number-tracking, -0.03em );
-	color: var( --kdna-chart-stat-number-colour, #14332c );
+	font-size: var( --_kdna-chart-stat-number-size );
+	font-weight: var( --_kdna-chart-stat-number-weight );
+	line-height: var( --_kdna-chart-stat-number-leading );
+	letter-spacing: var( --_kdna-chart-stat-number-tracking );
+	color: var( --_kdna-chart-stat-number-colour );
 	font-variant-numeric: tabular-nums;
 }
 
@@ -655,22 +1067,22 @@
  * belongs to however large that figure is set.
  */
 .kdna-chart__stat-suffix {
-	font-size: var( --kdna-chart-stat-suffix-size, 0.5em );
-	font-weight: var( --kdna-chart-stat-suffix-weight, 600 );
-	color: var( --kdna-chart-stat-suffix-colour, #6b7a75 );
+	font-size: var( --_kdna-chart-stat-suffix-size );
+	font-weight: var( --_kdna-chart-stat-suffix-weight );
+	color: var( --_kdna-chart-stat-suffix-colour );
 	letter-spacing: 0;
 }
 
 .kdna-chart__stat-label {
-	font-size: var( --kdna-chart-stat-label-size, 0.9375rem );
-	font-weight: var( --kdna-chart-stat-label-weight, 500 );
-	letter-spacing: var( --kdna-chart-stat-label-tracking, 0.02em );
+	font-size: var( --_kdna-chart-stat-label-size );
+	font-weight: var( --_kdna-chart-stat-label-weight );
+	letter-spacing: var( --_kdna-chart-stat-label-tracking );
 	line-height: 1.35;
-	color: var( --kdna-chart-stat-label-colour, #6b7a75 );
+	color: var( --_kdna-chart-stat-label-colour );
 }
 
-.kdna-chart__stat--strong .kdna-chart__stat-value { color: var( --kdna-chart-series-strong, #14332c ); }
-.kdna-chart__stat--muted .kdna-chart__stat-value { color: var( --kdna-chart-series-muted, #9aa8a3 ); }
+.kdna-chart__stat--strong .kdna-chart__stat-value { color: var( --_kdna-chart-series-strong ); }
+.kdna-chart__stat--muted .kdna-chart__stat-value { color: var( --_kdna-chart-series-muted ); }
 
 /* ---------------------------------------------------------------------
  * The annotation layer
@@ -685,8 +1097,8 @@
 
 .kdna-chart__marker {
 	fill: none;
-	stroke: var( --kdna-chart-marker-colour, #6b7a75 );
-	stroke-width: var( --kdna-chart-marker-width, 2px );
+	stroke: var( --_kdna-chart-marker-colour );
+	stroke-width: var( --_kdna-chart-marker-width );
 }
 
 .kdna-chart__marker--solid {
@@ -694,21 +1106,21 @@
 }
 
 .kdna-chart__marker--dashed {
-	stroke-dasharray: var( --kdna-chart-marker-dash-dashed, 10px 8px );
+	stroke-dasharray: var( --_kdna-chart-marker-dash-dashed );
 }
 
 .kdna-chart__marker--dotted {
-	stroke-dasharray: var( --kdna-chart-marker-dash-dotted, 2px 8px );
+	stroke-dasharray: var( --_kdna-chart-marker-dash-dotted );
 	stroke-linecap: round;
 }
 
 .kdna-chart__marker-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-marker-label-size, 20px );
-	font-weight: var( --kdna-chart-marker-label-weight, 600 );
-	letter-spacing: var( --kdna-chart-marker-label-letter-spacing, 0.04em );
-	text-transform: var( --kdna-chart-marker-label-transform, none );
-	fill: var( --kdna-chart-marker-label-colour, #14332c );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-marker-label-size );
+	font-weight: var( --_kdna-chart-marker-label-weight );
+	letter-spacing: var( --_kdna-chart-marker-label-letter-spacing );
+	text-transform: var( --_kdna-chart-marker-label-transform );
+	fill: var( --_kdna-chart-marker-label-colour );
 }
 
 /*
@@ -719,8 +1131,8 @@
  * chart its polish rather than its data.
  */
 .kdna-chart__point {
-	r: var( --kdna-chart-point-radius, 9px );
-	fill: var( --kdna-chart-point-colour, #14332c );
+	r: var( --_kdna-chart-point-radius );
+	fill: var( --_kdna-chart-point-colour );
 	stroke: none;
 }
 
@@ -729,61 +1141,61 @@
  * so the line does not run through the middle of it.
  */
 .kdna-chart__point--hollow {
-	fill: var( --kdna-chart-point-fill-hollow, #fff );
-	stroke: var( --kdna-chart-point-colour, #14332c );
-	stroke-width: var( --kdna-chart-point-stroke-width, 3.5px );
+	fill: var( --_kdna-chart-point-fill-hollow );
+	stroke: var( --_kdna-chart-point-colour );
+	stroke-width: var( --_kdna-chart-point-stroke-width );
 }
 
 .kdna-chart__point-label {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-point-label-size, 20px );
-	font-weight: var( --kdna-chart-point-label-weight, 500 );
-	fill: var( --kdna-chart-point-label-colour, #4a5f58 );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-point-label-size );
+	font-weight: var( --_kdna-chart-point-label-weight );
+	fill: var( --_kdna-chart-point-label-colour );
 }
 
 .kdna-chart__callout-value {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-callout-value-size-large, 56px );
-	font-weight: var( --kdna-chart-callout-value-weight, 700 );
-	letter-spacing: var( --kdna-chart-callout-value-letter-spacing, -0.02em );
-	fill: var( --kdna-chart-callout-value-colour, #14332c );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-callout-value-size-large );
+	font-weight: var( --_kdna-chart-callout-value-weight );
+	letter-spacing: var( --_kdna-chart-callout-value-letter-spacing );
+	fill: var( --_kdna-chart-callout-value-colour );
 	font-variant-numeric: tabular-nums;
 }
 
 .kdna-chart__callout-value--small {
-	font-size: var( --kdna-chart-callout-value-size-small, 34px );
+	font-size: var( --_kdna-chart-callout-value-size-small );
 }
 
 .kdna-chart__callout-caption {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-callout-caption-size, 20px );
-	font-weight: var( --kdna-chart-callout-caption-weight, 400 );
-	fill: var( --kdna-chart-callout-caption-colour, #6b7a75 );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-callout-caption-size );
+	font-weight: var( --_kdna-chart-callout-caption-weight );
+	fill: var( --_kdna-chart-callout-caption-colour );
 }
 
 .kdna-chart__leader {
 	fill: none;
-	stroke: var( --kdna-chart-leader-colour, #9aa8a3 );
-	stroke-width: var( --kdna-chart-leader-width, 1.75px );
-	stroke-dasharray: var( --kdna-chart-leader-dash, none );
+	stroke: var( --_kdna-chart-leader-colour );
+	stroke-width: var( --_kdna-chart-leader-width );
+	stroke-dasharray: var( --_kdna-chart-leader-dash );
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
 
 .kdna-chart__bracket {
 	fill: none;
-	stroke: var( --kdna-chart-bracket-colour, #9aa8a3 );
-	stroke-width: var( --kdna-chart-bracket-width, 1.75px );
+	stroke: var( --_kdna-chart-bracket-colour );
+	stroke-width: var( --_kdna-chart-bracket-width );
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
 
 .kdna-chart__note {
-	font-family: var( --kdna-chart-font-family, inherit );
-	font-size: var( --kdna-chart-note-size, 20px );
-	font-weight: var( --kdna-chart-note-weight, 400 );
-	font-style: var( --kdna-chart-note-style, italic );
-	fill: var( --kdna-chart-note-colour, #8a968f );
+	font-family: var( --_kdna-chart-font-family );
+	font-size: var( --_kdna-chart-note-size );
+	font-weight: var( --_kdna-chart-note-weight );
+	font-style: var( --_kdna-chart-note-style );
+	fill: var( --_kdna-chart-note-colour );
 }
 
 /* ---------------------------------------------------------------------
@@ -791,23 +1203,37 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart__caption {
-	margin: var( --kdna-chart-caption-margin, 0.75rem 0 0 );
-	font-size: var( --kdna-chart-caption-size, 1rem );
-	font-weight: var( --kdna-chart-caption-weight, 400 );
-	line-height: var( --kdna-chart-caption-line-height, 1.5 );
-	text-align: var( --kdna-chart-caption-align, left );
-	color: var( --kdna-chart-caption-colour, #4a5f58 );
+	margin: var( --_kdna-chart-caption-margin );
+	font-family: var( --_kdna-chart-caption-family );
+	font-size: var( --_kdna-chart-caption-size );
+	font-weight: var( --_kdna-chart-caption-weight );
+	font-style: var( --_kdna-chart-caption-style );
+	line-height: var( --_kdna-chart-caption-line-height );
+	letter-spacing: var( --_kdna-chart-caption-letter-spacing );
+	text-align: var( --_kdna-chart-caption-align );
+	text-transform: var( --_kdna-chart-caption-transform );
+	color: var( --_kdna-chart-caption-colour );
 }
 
 .kdna-chart__source {
-	margin: var( --kdna-chart-source-margin, 0.5rem 0 0 );
-	text-align: var( --kdna-chart-source-align, left );
+	margin: var( --_kdna-chart-source-margin );
+	text-align: var( --_kdna-chart-source-align );
 }
 
+/*
+ * The typography is on the small element rather than on its wrapper,
+ * because small is what carries the text. The margin and the alignment
+ * stay on the wrapper, which is what is being positioned.
+ */
 .kdna-chart__source small {
-	font-size: var( --kdna-chart-source-size, 0.8125rem );
-	font-weight: var( --kdna-chart-source-weight, 400 );
-	color: var( --kdna-chart-source-colour, #8a968f );
+	font-family: var( --_kdna-chart-source-family );
+	font-size: var( --_kdna-chart-source-size );
+	font-weight: var( --_kdna-chart-source-weight );
+	font-style: var( --_kdna-chart-source-style );
+	line-height: var( --_kdna-chart-source-line-height );
+	letter-spacing: var( --_kdna-chart-source-letter-spacing );
+	text-transform: var( --_kdna-chart-source-transform );
+	color: var( --_kdna-chart-source-colour );
 }
 
 /* ---------------------------------------------------------------------
@@ -816,10 +1242,10 @@
 
 .kdna-chart--placeholder {
 	padding: 2rem;
-	background: var( --kdna-chart-placeholder-background, #f6f7f7 );
-	border: 1px dashed var( --kdna-chart-placeholder-border, #dcdcde );
+	background: var( --_kdna-chart-placeholder-background );
+	border: 1px dashed var( --_kdna-chart-placeholder-border );
 	border-radius: 8px;
-	color: var( --kdna-chart-placeholder-colour, #50575e );
+	color: var( --_kdna-chart-placeholder-colour );
 	text-align: center;
 }
 
@@ -848,6 +1274,7 @@
  *   .kdna-chart--{type}          the chart type
  *   .kdna-chart--engine-{engine} which engine drew it
  *   .kdna-chart__plot            every drawn mark
+ *   .kdna-chart__plot-area       the rectangle the data is drawn inside
  *   .kdna-chart__series          one series, with its emphasis modifier
  *   .kdna-chart__gridlines       all gridlines
  *   .kdna-chart__axis-labels     all tick labels
@@ -896,29 +1323,34 @@
  * the same problem as a chart on a phone, and only its container knows
  * it. Where container queries are supported they land later and win.
  *
- * Stage 9 turns these into responsive controls. These are the defaults
- * those controls start from.
+ * These move the --auto layer, not the set layer, so they are what a
+ * chart does when nobody has said otherwise. The moment a size IS set
+ * on the settings page or on a chart, that value wins here too and the
+ * automatic scaling stops applying to it, which is the right way round
+ * for an explicit instruction, and the reason the style engine offers a
+ * tablet and a mobile value for every one of these. Setting a desktop
+ * size and nothing else is a decision to hold that size everywhere.
  * ------------------------------------------------------------------ */
 
 @media ( max-width: 900px ) {
 	.kdna-chart {
-		--kdna-chart-axis-label-size: 22px;
-		--kdna-chart-axis-title-size: 22px;
-		--kdna-chart-line-width-strong: 4px;
-		--kdna-chart-line-width-normal: 3px;
-		--kdna-chart-line-width-muted: 2.5px;
+		--kdna-chart-axis-label-size--auto: 22px;
+		--kdna-chart-axis-title-size--auto: 22px;
+		--kdna-chart-line-width-strong--auto: 4px;
+		--kdna-chart-line-width-normal--auto: 3px;
+		--kdna-chart-line-width-muted--auto: 2.5px;
 	}
 }
 
 @media ( max-width: 600px ) {
 	.kdna-chart {
-		--kdna-chart-axis-label-size: 24px;
-		--kdna-chart-axis-title-size: 24px;
-		--kdna-chart-line-width-strong: 5px;
-		--kdna-chart-line-width-normal: 4px;
-		--kdna-chart-line-width-muted: 3px;
-		--kdna-chart-gridline-width: 2px;
-		--kdna-chart-margin-block: 1.5rem;
+		--kdna-chart-axis-label-size--auto: 24px;
+		--kdna-chart-axis-title-size--auto: 24px;
+		--kdna-chart-line-width-strong--auto: 5px;
+		--kdna-chart-line-width-normal--auto: 4px;
+		--kdna-chart-line-width-muted--auto: 3px;
+		--kdna-chart-gridline-width--auto: 2px;
+		--kdna-chart-margin-block--auto: 1.5rem;
 	}
 }
 
@@ -930,18 +1362,18 @@
  */
 @container kdna-chart ( max-width: 640px ) {
 	.kdna-chart__frame {
-		--kdna-chart-value-label-size: 24px;
-		--kdna-chart-axis-label-size: 24px;
-		--kdna-chart-axis-title-size: 24px;
-		--kdna-chart-marker-label-size: 24px;
-		--kdna-chart-point-label-size: 24px;
-		--kdna-chart-note-size: 24px;
-		--kdna-chart-callout-caption-size: 24px;
-		--kdna-chart-segment-label-size: 24px;
-		--kdna-chart-legend-label-size: 24px;
-		--kdna-chart-line-width-strong: 4px;
-		--kdna-chart-line-width-normal: 3px;
-		--kdna-chart-line-width-muted: 2.5px;
+		--kdna-chart-value-label-size--auto: 24px;
+		--kdna-chart-axis-label-size--auto: 24px;
+		--kdna-chart-axis-title-size--auto: 24px;
+		--kdna-chart-marker-label-size--auto: 24px;
+		--kdna-chart-point-label-size--auto: 24px;
+		--kdna-chart-note-size--auto: 24px;
+		--kdna-chart-callout-caption-size--auto: 24px;
+		--kdna-chart-segment-label-size--auto: 24px;
+		--kdna-chart-legend-label-size--auto: 24px;
+		--kdna-chart-line-width-strong--auto: 4px;
+		--kdna-chart-line-width-normal--auto: 3px;
+		--kdna-chart-line-width-muted--auto: 2.5px;
 	}
 }
 
@@ -952,18 +1384,18 @@
  */
 @container kdna-chart ( max-width: 420px ) {
 	.kdna-chart__frame {
-		--kdna-chart-value-label-size: 24px;
-		--kdna-chart-axis-label-size: 24px;
-		--kdna-chart-axis-title-size: 24px;
-		--kdna-chart-marker-label-size: 26px;
-		--kdna-chart-point-label-size: 26px;
-		--kdna-chart-note-size: 26px;
-		--kdna-chart-callout-caption-size: 26px;
-		--kdna-chart-callout-value-size-large: 64px;
-		--kdna-chart-line-width-strong: 5.5px;
-		--kdna-chart-line-width-normal: 4.5px;
-		--kdna-chart-line-width-muted: 3.5px;
-		--kdna-chart-gridline-width: 2.5px;
+		--kdna-chart-value-label-size--auto: 24px;
+		--kdna-chart-axis-label-size--auto: 24px;
+		--kdna-chart-axis-title-size--auto: 24px;
+		--kdna-chart-marker-label-size--auto: 26px;
+		--kdna-chart-point-label-size--auto: 26px;
+		--kdna-chart-note-size--auto: 26px;
+		--kdna-chart-callout-caption-size--auto: 26px;
+		--kdna-chart-callout-value-size-large--auto: 64px;
+		--kdna-chart-line-width-strong--auto: 5.5px;
+		--kdna-chart-line-width-normal--auto: 4.5px;
+		--kdna-chart-line-width-muted--auto: 3.5px;
+		--kdna-chart-gridline-width--auto: 2.5px;
 	}
 }
 

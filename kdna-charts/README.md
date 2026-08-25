@@ -7,7 +7,7 @@ rather than the kind that belongs on a dashboard.
 - **Slug:** `kdna-charts`
 - **Version:** 1.0.0
 - **Requires:** WordPress 6.0, PHP 8.0
-- **Build stage:** 8 of 13, the chart editor
+- **Build stage:** 9 of 13, the style engine
 
 A full README, written for someone installing the finished plugin,
 arrives at Stage 13. What follows is the state of the build.
@@ -73,6 +73,12 @@ Structured keys are stored JSON encoded:
 | `_kdna_chart_callouts` | Large number annotations | list |
 | `_kdna_chart_notes` | Small free floating labels | list |
 | `_kdna_chart_style_overrides` | Per chart style overrides | object |
+| Style control schema, one control per custom property | 9 | Done |
+| Style resolver, absent means inherit, with caching | 9 | Done |
+| Settings > KDNA Charts, sectioned controls and a live preview | 9 | Done |
+| Per chart overrides, in the editor's Style tab | 9 | Done |
+| Preset export and import | 9 | Done |
+| Every dimensional control responsive across three breakpoints | 9 | Done |
 
 ### Why JSON rather than serialised arrays
 
@@ -210,12 +216,12 @@ with real classes.
 
 **Not one colour, stroke width or font size is written into the
 markup.** That is the whole architecture rather than a tidiness rule.
-Because the renderer emits geometry and classes only, the Stage 9
-cascade can change how every chart on a site looks by setting custom
-properties on a wrapper, with nothing re-rendering and no chart data
-touched. A chart that says nothing about its own colours inherits the
-site palette automatically, because an unset property falls through to
-the fallback in `assets/css/kdna-charts.css`.
+Because the renderer emits geometry and classes only, the style engine
+can change how every chart on a site looks by setting custom properties
+on a wrapper, with nothing re-rendering and no chart data touched. A
+chart that says nothing about its own colours inherits the site palette
+automatically, because an unset property falls through to the `--auto`
+layer in `assets/css/kdna-charts.css`.
 
 The one apparent exception is `fill="url(#gradient)"` on an area path.
 That is a reference to a definition, not a colour: the stops inside the
@@ -247,9 +253,9 @@ labels the moment a site raises the label size.
 **The one place PHP and CSS have to agree** is how much room a label
 needs. The padding reserves for a label at 24 user units, which is the
 largest size the shipped stylesheet grows one to in a narrow container.
-At the 18 unit default there is room to spare. A site that raises the
-label size past 24 has to raise the padding with it, which is what the
-padding controls at Stage 9 are for.
+Since Stage 9 the style engine also tells the scale what it set, and
+the reservation grows to match. See *The style engine* below for why
+it reserves for the largest breakpoint rather than the current one.
 
 **Charts respond to their own width, not the window's.** Text inside a
 viewBox scales with the chart, so a chart at half width has labels at
@@ -438,6 +444,188 @@ impression of one. It is a description list, because that is what these
 are: a term and the figure that goes with it. The figure is shown first
 and read second, which is the right way round for both.
 
+## The style engine
+
+Ported from the KDNA Tables Shortcode Style Engine, and diverging from
+it in two places for reasons given below.
+
+Three files, one job each:
+
+- `class-kdna-charts-style-schema.php`: every style control, defined
+  once. A hundred and forty nine of them across thirteen sections.
+- `class-kdna-charts-style-resolver.php`: stored values into CSS custom
+  properties, and the cache in front of that.
+- `class-kdna-charts-style-admin.php`: Settings > KDNA Charts, the per
+  chart panel, the REST routes, and the sanitisers.
+
+### The cascade
+
+```
+assets/css/kdna-charts.css, the --auto layer
+  -> the global option, kdna_charts_style_defaults
+    -> the chart's own overrides, _kdna_chart_style_overrides
+      -> an Elementor widget's controls  (Stage 11)
+```
+
+Later wins, and the merge happens at the **leaf**, not at the control. A
+global that sets a desktop axis label size and a chart override that
+sets only the mobile one produce a result carrying both. Replacing whole
+controls would silently drop the global's other breakpoints, so a chart
+would lose its desktop size the moment somebody set a mobile one.
+
+### Absent means inherit
+
+A value in its inherit state is skipped entirely rather than written as
+an empty value. This is the rule the whole engine rests on, and it holds
+at every level: the sanitiser refuses to store an empty value, the
+resolver skips it, and the stylesheet's fallback chains only fall
+through on a property that was never emitted.
+
+That last part is the one with teeth. A responsive control emits up to
+three properties, and a breakpoint with no value emits **nothing**:
+
+```css
+--_x: var( --x-tablet, var( --x, var( --x--auto ) ) );
+```
+
+Writing `--x-tablet: ;` there would not be absent. The chain would stop
+at it and resolve to empty, and the rule reading `--_x` would be invalid
+at computed-value time, which paints as unset and inherited, not as the
+desktop value. One empty string, and a chart loses its axis labels on a
+tablet.
+
+### Three names per token
+
+The stylesheet gives every token three names, and they are not
+interchangeable:
+
+| Name | Who writes it | What it is |
+| --- | --- | --- |
+| `--kdna-chart-x--auto` | this plugin's stylesheet | the default, always set |
+| `--kdna-chart-x` | the style engine, inline; or a theme | what somebody set |
+| `--_kdna-chart-x` | the stylesheet's resolution layer | what the rules read |
+
+**The indirection is not optional.** An inline style attribute beats
+every stylesheet rule, media query or not. So if the engine wrote
+`--kdna-chart-axis-label-size` directly and the rules read it directly,
+then the moment anybody set an axis label size the narrow-chart rules at
+the bottom of the stylesheet would stop working, at every width,
+silently, with the labels shrinking away to nothing on a phone. A custom
+property also cannot refer to itself, so those rules could not recover
+the desktop value either.
+
+Splitting the name in three fixes both. The rules read `--_x`, resolved
+from a set value if there is one and from `--auto` if there is not, and
+the narrow rules move `--auto`, which no inline attribute ever writes.
+
+The resolution layer is generated from the schema and checked against it
+by a test. Do not hand-edit an entry in it.
+
+### Where this diverges from KDNA Tables
+
+**No group controls.** Tables groups its typography, border and
+background controls, so one control there owns several properties
+through a `fields` array, and its resolver, sanitiser and editor all
+carry a nesting level for it. Charts does not need that: the stylesheet
+already exposes a flat, complete vocabulary of single-purpose
+properties, so a group would be a second structure laid over one that is
+already right. What groups bought Tables, a readable panel, is bought
+here by a `group` key that is a display heading and nothing more. Every
+control writes exactly one property, and a test asserts the reverse too:
+every property in the stylesheet has exactly one control.
+
+**No schema defaults.** Tables duplicates every stylesheet value into
+its schema so the settings page can show it, and carries a comment about
+an upgraded site serving a cached string built by the previous version's
+defaults. Here the defaults live once, in the `--auto` layer, and every
+schema entry defaults to null. An unset control emits nothing and the
+stylesheet decides; "reset to plugin defaults" is literally "store
+nothing"; and a later change to a default reaches every site, including
+the ones that have saved styles. The schema carries a `placeholder`
+string for display only, so a stale one is a cosmetic bug rather than a
+behavioural one, and a test keeps it honest anyway.
+
+### What the admin does
+
+Settings > KDNA Charts, with a link to it from the KDNA Charts menu
+because that is where somebody working on charts already is.
+
+- Thirteen sections, with a dot on any that carries a value. A setting
+  left behind in a section nobody is looking at is otherwise a hunt.
+- A filter across every section at once, because with a hundred and
+  fifty controls the common case is knowing what you want and not which
+  section it is in.
+- A live preview in an iframe, at 1200, 900 and 390 pixels. It has to be
+  an iframe: two of the three breakpoints are viewport media queries,
+  and only a document with a real 390px viewport makes the mobile query
+  fire. Anything else would mean a second copy of the resolution layer.
+- Preset export and import. Export writes what is **stored**, not what
+  is on screen, and says so when there are unsaved changes; import
+  **replaces** rather than merges, and names every key it dropped.
+
+The per chart panel is the same template in `chart` context: every field
+shows what it is inheriting until it is explicitly overridden, Override
+seeds the control from the value it was inheriting, and Revert clears it
+again. It has no iframe of its own: the chart editor already has a live
+preview beside it, and the panel paints its properties into that one.
+
+### The preview resolves twice, in two languages
+
+The preview writes custom properties straight into the iframe, so the
+resolver exists twice: once in PHP and once, transliterated, in
+`kdna-style-admin.js`. Second implementations drift, and this drift
+would be invisible, because the preview would simply show something the front
+end does not.
+
+Two things hold it in place. Both are driven by the same schema object,
+so anything expressible in a schema entry needs no code in either. And
+an executable parity test runs both over the same value sets, including
+the awkward ones, and compares the property maps key by key.
+
+### Things learned by looking at it
+
+**A tablet label ran into the axis title.** The scale reserves padding
+for a tick label from an assumed 24 units, because PHP cannot measure
+text, and that held only while labels were drawn smaller than the slot
+kept for them. Setting a tablet size of 30 put the label straight
+through the title. The scale is now told the largest size configured at
+any breakpoint, and reserves for that. It has to be the largest rather
+than the current one, because which breakpoint applies is decided by CSS
+in the browser at a width PHP will never know: the geometry is settled
+once and has to hold at every width.
+
+**A per cent sign is half again the width of a digit.** With the
+reservation and the drawn size now equal, the flat 0.62-per-character
+estimate stopped having any margin to hide in, and `100%` was
+under-measured by about fifteen per cent. The scale now weighs each
+character. The annotation layer deliberately does **not** share that
+measure: it was tried, and it made the layout worse. Those figures are
+one input to a tuned system alongside the wrap fraction, the nudge step
+and the box padding, and measuring a note more accurately let two more
+words fit on its first line, which made the box wide enough to reach the
+callout beside it and got the note thrown eight steps down into the
+middle of the curve. More accurate, and a worse chart.
+
+**An unset colour showed a black swatch.** A native colour input cannot
+represent "nothing" and cannot show transparency, and six controls here
+default to transparent, so the picker sat there in black beside the
+word `transparent`, which is a straightforward lie about what the chart
+will draw. An unset swatch is struck through instead.
+
+**A bare value was silently dropped.** Half the value shapes here are
+arrays (a slider is `{ size, unit }`), so testing whether a stored
+value is an array says nothing about whether it is a device map. A
+hand-written preset saying `"axis_label_size": { "size": 18, "unit":
+"px" }`, which is the obvious way to write it, imported cleanly and then
+did nothing at all. The test is now whether a **device key** is present;
+the two shapes cannot collide, because no value shape has a key called
+desktop, tablet or mobile.
+
+**The default hint said the wrong thing on a chart.** Showing the
+stylesheet's value next to a field that inherits from the global layer
+put two answers to one question on every row, and one of them was wrong
+whenever the global had been set. It is on the settings page only.
+
 ## The editor
 
 Four tabs over one Alpine component holding the whole definition, with
@@ -517,27 +705,73 @@ kdna-charts/
 │   ├── class-kdna-charts-renderer-svg.php
 │   ├── class-kdna-charts-annotations.php
 │   ├── class-kdna-charts-editor.php
-│   └── class-kdna-charts-admin.php
+│   ├── class-kdna-charts-admin.php
+│   ├── class-kdna-charts-style-schema.php
+│   ├── class-kdna-charts-style-resolver.php
+│   └── class-kdna-charts-style-admin.php
 ├── templates/
 │   ├── admin-editor-data.php
 │   ├── admin-editor-annotations.php
 │   ├── admin-editor-options.php
 │   ├── admin-editor-import.php
 │   ├── admin-type-chooser-modal.php
+│   ├── admin-style-settings.php
+│   ├── admin-style-overrides.php
+│   ├── admin-style-controls.php
+│   ├── admin-style-preview.php
+│   ├── admin-style-tools.php
 │   ├── render-caption.php
 │   ├── render-source.php
 │   └── render-placeholder.php
 ├── assets/
 │   ├── css/
 │   │   ├── kdna-admin.css
+│   │   ├── kdna-style-admin.css
 │   │   └── kdna-charts.css
 │   └── js/
 │       ├── alpine.min.js
-│       └── kdna-admin.js
+│       ├── kdna-admin.js
+│       └── kdna-style-admin.js
 ├── docs/
 │   └── chart-schema.md
 └── README.md
 ```
+
+## Testing Stage 9
+
+1. Go to **Settings > KDNA Charts**. Thirteen sections down the left,
+   controls on the right, a preview above. Confirm the KDNA Charts menu
+   also carries a **Styles** link to the same page.
+2. Set **Chart Frame > Background** to something obvious. The preview
+   changes as you type, and the save bar says *Unsaved changes*. The
+   live chart on the front end does not change until you save.
+3. Press **Save Styles**, then reload the front end. It changes.
+4. Set **Axis Labels > Tick Labels > Size** to 18 on desktop, then click
+   the tablet icon and set 30, then mobile and set 44. A dot appears on
+   each breakpoint that carries a value. Switch the preview between
+   Desktop, Tablet and Mobile: the labels change at each, and nothing
+   collides with the axis title at any of them.
+5. Clear the tablet value only. The tablet preview now shows the desktop
+   size, because a breakpoint with no value falls through rather than
+   resolving to nothing.
+6. Type `label size` in the filter. Every section reports how many
+   matches it holds, so you can find a control without knowing which
+   section it lives in.
+7. Press **Export preset**, then **Import preset** and paste the file
+   back. It reports how many values it took. Now edit the file to add
+   `"nonsense": "#fff"` and import again: it says that key was not
+   imported rather than silently dropping it.
+8. Open a chart and go to its **Style** tab. Every field reads
+   *Inheriting* with the value it is inheriting. Press **Override** on
+   one: the control appears, already holding the value it was
+   inheriting. Change it, save, and confirm the chart differs from the
+   global default while every other chart does not.
+9. Press **Revert to global** on that field. It goes back to inheriting.
+10. With the Style tab open, change something on the **Data** tab. The
+    preview re-renders and keeps the unsaved style edits.
+11. As a non-administrator, open a chart. The Style tab explains that
+    styling is an administrator setting rather than showing controls
+    that would not save.
 
 ## Testing Stage 8
 
