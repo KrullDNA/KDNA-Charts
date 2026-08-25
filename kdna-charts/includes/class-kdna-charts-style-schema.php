@@ -708,7 +708,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'caption',
 				'--kdna-chart-caption-colour',
-				'#4a5f58'
+				'#5f5f5f'
 			),
 
 			'caption_align'          => self::choice(
@@ -840,14 +840,14 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'gridlines',
 				'--kdna-chart-gridline-colour',
-				'#d5ddd9'
+				'#e1e1e1'
 			),
 
 			'gridline_colour_strong' => self::colour(
 				__( 'Colour, Emphasised', 'kdna-charts' ),
 				'gridlines',
 				'--kdna-chart-gridline-colour-strong',
-				'#9aa8a3',
+				'#aaaaaa',
 				'',
 				__( 'Used by a gridline the chart definition marks strong, such as a zero line.', 'kdna-charts' )
 			),
@@ -944,7 +944,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'axis',
 				'--kdna-chart-axis-label-colour',
-				'#4a5f58',
+				'#5f5f5f',
 				$labels
 			),
 
@@ -952,7 +952,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour, Emphasised', 'kdna-charts' ),
 				'axis',
 				'--kdna-chart-axis-label-colour-strong',
-				'#14332c',
+				'#303030',
 				$labels
 			),
 
@@ -960,7 +960,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour, Muted', 'kdna-charts' ),
 				'axis',
 				'--kdna-chart-axis-label-colour-muted',
-				'#a8b3af',
+				'#b6b6b6',
 				$labels
 			),
 
@@ -997,7 +997,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'axis',
 				'--kdna-chart-axis-title-colour',
-				'#6b7a75',
+				'#7c7c7c',
 				$titles
 			),
 
@@ -1044,7 +1044,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Line Colour, Emphasised', 'kdna-charts' ),
 				'series',
 				'--kdna-chart-series-strong',
-				'#14332c',
+				'#303030',
 				$lines
 			),
 
@@ -1052,7 +1052,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Line Colour', 'kdna-charts' ),
 				'series',
 				'--kdna-chart-series-normal',
-				'#4a5f58',
+				'#5f5f5f',
 				$lines
 			),
 
@@ -1060,7 +1060,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Line Colour, Muted', 'kdna-charts' ),
 				'series',
 				'--kdna-chart-series-muted',
-				'#9aa8a3',
+				'#aaaaaa',
 				$lines
 			),
 
@@ -1131,7 +1131,7 @@ class KDNA_Charts_Style_Schema {
 		 * these six and gets them, which is why they are six plain
 		 * controls rather than one generated scale.
 		 */
-		$ramp_defaults = array( '#14332c', '#3d5f55', '#6b8b80', '#9db3ab', '#c3d2cc', '#e2e9e6' );
+		$ramp_defaults = array( '#303030', '#5b5b5b', '#878787', '#b3b3b3', '#d4d4d4', '#e2e9e6' );
 		foreach ( $ramp_defaults as $index => $default ) {
 			$number = $index + 1;
 
@@ -1156,9 +1156,9 @@ class KDNA_Charts_Style_Schema {
 				'muted'  => __( 'Muted', 'kdna-charts' ),
 			);
 			$colours = array(
-				'strong' => '#14332c',
-				'normal' => '#4a5f58',
-				'muted'  => '#9aa8a3',
+				'strong' => '#303030',
+				'normal' => '#5f5f5f',
+				'muted'  => '#aaaaaa',
 			);
 			$tops    = array(
 				'strong' => '0.16',
@@ -1204,7 +1204,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Colour, Emphasised', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-bar-colour-strong',
-			'#14332c',
+			'#303030',
 			$bars
 		);
 
@@ -1212,7 +1212,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Colour', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-bar-colour-normal',
-			'#4a5f58',
+			'#5f5f5f',
 			$bars
 		);
 
@@ -1220,7 +1220,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Colour, Muted', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-bar-colour-muted',
-			'#b6c2bd',
+			'#c5c5c5',
 			$bars
 		);
 
@@ -1279,7 +1279,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Colour', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-value-label-colour',
-			'#14332c',
+			'#303030',
 			$values
 		);
 
@@ -1340,7 +1340,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Label Colour', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-segment-label-colour',
-			'#14332c',
+			'#303030',
 			$segments
 		);
 
@@ -1377,7 +1377,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Donut Centre Colour', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-segment-centre-colour',
-			'#14332c',
+			'#303030',
 			$segments
 		);
 
@@ -1385,7 +1385,7 @@ class KDNA_Charts_Style_Schema {
 			__( 'Leader Colour', 'kdna-charts' ),
 			'series',
 			'--kdna-chart-segment-leader-colour',
-			'#9aa8a3',
+			'#aaaaaa',
 			$segments
 		);
 
@@ -1427,7 +1427,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'points',
 				'--kdna-chart-point-colour',
-				'#14332c'
+				'#303030'
 			),
 
 			'point_fill_hollow'  => self::colour(
@@ -1476,7 +1476,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'points',
 				'--kdna-chart-point-label-colour',
-				'#4a5f58',
+				'#5f5f5f',
 				$labels
 			),
 		);
@@ -1493,7 +1493,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'markers',
 				'--kdna-chart-marker-colour',
-				'#6b7a75',
+				'#7c7c7c',
 				$lines
 			),
 
@@ -1554,7 +1554,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'markers',
 				'--kdna-chart-marker-label-colour',
-				'#14332c',
+				'#303030',
 				$labels
 			),
 
@@ -1623,7 +1623,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'callouts',
 				'--kdna-chart-callout-value-colour',
-				'#14332c',
+				'#303030',
 				$value
 			),
 
@@ -1660,7 +1660,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'callouts',
 				'--kdna-chart-callout-caption-colour',
-				'#6b7a75',
+				'#7c7c7c',
 				$caption
 			),
 
@@ -1668,7 +1668,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Leader Colour', 'kdna-charts' ),
 				'callouts',
 				'--kdna-chart-leader-colour',
-				'#9aa8a3',
+				'#aaaaaa',
 				$leaders
 			),
 
@@ -1698,7 +1698,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Bracket Colour', 'kdna-charts' ),
 				'callouts',
 				'--kdna-chart-bracket-colour',
-				'#9aa8a3',
+				'#aaaaaa',
 				$leaders,
 				__( 'The bracket a callout draws when it is anchored to a span rather than a single point.', 'kdna-charts' )
 			),
@@ -1745,7 +1745,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'notes',
 				'--kdna-chart-note-colour',
-				'#8a968f'
+				'#999999'
 			),
 
 			'note_style'  => self::choice(
@@ -1794,7 +1794,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Label Colour', 'kdna-charts' ),
 				'legend',
 				'--kdna-chart-legend-label-colour',
-				'#4a5f58'
+				'#5f5f5f'
 			),
 		);
 	}
@@ -1826,7 +1826,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'source',
 				'--kdna-chart-source-colour',
-				'#8a968f'
+				'#999999'
 			),
 
 			'source_align'          => self::choice(
@@ -1946,7 +1946,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'stats',
 				'--kdna-chart-stat-number-colour',
-				'#14332c',
+				'#303030',
 				$number
 			),
 
@@ -1997,7 +1997,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'stats',
 				'--kdna-chart-stat-suffix-colour',
-				'#6b7a75',
+				'#7c7c7c',
 				$suffix
 			),
 
@@ -2026,7 +2026,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'stats',
 				'--kdna-chart-stat-label-colour',
-				'#6b7a75',
+				'#7c7c7c',
 				$label
 			),
 
@@ -2056,7 +2056,7 @@ class KDNA_Charts_Style_Schema {
 				__( 'Colour', 'kdna-charts' ),
 				'stats',
 				'--kdna-chart-stat-rule-colour',
-				'#d5ddd9',
+				'#e1e1e1',
 				$rule
 			),
 		);

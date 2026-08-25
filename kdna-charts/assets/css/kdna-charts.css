@@ -62,9 +62,9 @@
 	--kdna-chart-font-family--auto: inherit;
 
 	/* Series, by emphasis */
-	--kdna-chart-series-strong--auto: #14332c;
-	--kdna-chart-series-normal--auto: #4a5f58;
-	--kdna-chart-series-muted--auto: #9aa8a3;
+	--kdna-chart-series-strong--auto: #303030;
+	--kdna-chart-series-normal--auto: #5f5f5f;
+	--kdna-chart-series-muted--auto: #aaaaaa;
 
 	--kdna-chart-line-width-strong--auto: 3.5px;
 	--kdna-chart-line-width-normal--auto: 2.5px;
@@ -74,9 +74,9 @@
 	--kdna-chart-dash-dotted--auto: 0.1px 9px;
 
 	/* Area fills */
-	--kdna-chart-area-colour-strong--auto: #14332c;
-	--kdna-chart-area-colour-normal--auto: #4a5f58;
-	--kdna-chart-area-colour-muted--auto: #9aa8a3;
+	--kdna-chart-area-colour-strong--auto: #303030;
+	--kdna-chart-area-colour-normal--auto: #5f5f5f;
+	--kdna-chart-area-colour-muted--auto: #aaaaaa;
 
 	--kdna-chart-area-opacity-top-strong--auto: 0.16;
 	--kdna-chart-area-opacity-bottom-strong--auto: 0;
@@ -86,8 +86,8 @@
 	--kdna-chart-area-opacity-bottom-muted--auto: 0;
 
 	/* Gridlines */
-	--kdna-chart-gridline-colour--auto: #d5ddd9;
-	--kdna-chart-gridline-colour-strong--auto: #9aa8a3;
+	--kdna-chart-gridline-colour--auto: #e1e1e1;
+	--kdna-chart-gridline-colour-strong--auto: #aaaaaa;
 	--kdna-chart-gridline-colour-muted--auto: #e4e9e7;
 	--kdna-chart-gridline-width--auto: 1.5px;
 	--kdna-chart-gridline-width-strong--auto: 2px;
@@ -98,22 +98,22 @@
 	--kdna-chart-axis-label-size--auto: 18px;
 	--kdna-chart-axis-label-weight--auto: 400;
 	--kdna-chart-axis-label-weight-strong--auto: 600;
-	--kdna-chart-axis-label-colour--auto: #4a5f58;
-	--kdna-chart-axis-label-colour-strong--auto: #14332c;
-	--kdna-chart-axis-label-colour-muted--auto: #a8b3af;
+	--kdna-chart-axis-label-colour--auto: #5f5f5f;
+	--kdna-chart-axis-label-colour-strong--auto: #303030;
+	--kdna-chart-axis-label-colour-muted--auto: #b6b6b6;
 	--kdna-chart-axis-label-letter-spacing--auto: 0;
 
 	/* Axis titles */
 	--kdna-chart-axis-title-size--auto: 18px;
 	--kdna-chart-axis-title-weight--auto: 600;
-	--kdna-chart-axis-title-colour--auto: #6b7a75;
+	--kdna-chart-axis-title-colour--auto: #7c7c7c;
 	--kdna-chart-axis-title-letter-spacing--auto: 0.06em;
 	--kdna-chart-axis-title-transform--auto: uppercase;
 
 	/* Caption */
 	--kdna-chart-caption-size--auto: 1rem;
 	--kdna-chart-caption-weight--auto: 400;
-	--kdna-chart-caption-colour--auto: #4a5f58;
+	--kdna-chart-caption-colour--auto: #5f5f5f;
 	--kdna-chart-caption-align--auto: left;
 	--kdna-chart-caption-margin--auto: 0.75rem 0 0;
 	--kdna-chart-caption-line-height--auto: 1.5;
@@ -121,7 +121,7 @@
 	/* Source line */
 	--kdna-chart-source-size--auto: 0.8125rem;
 	--kdna-chart-source-weight--auto: 400;
-	--kdna-chart-source-colour--auto: #8a968f;
+	--kdna-chart-source-colour--auto: #999999;
 	--kdna-chart-source-align--auto: left;
 	--kdna-chart-source-margin--auto: 0.5rem 0 0;
 
@@ -133,17 +133,17 @@
 	 * degrees of the same thing. A site that needs distinct hues sets
 	 * these six and gets them.
 	 */
-	--kdna-chart-series-colour-1--auto: #14332c;
-	--kdna-chart-series-colour-2--auto: #3d5f55;
-	--kdna-chart-series-colour-3--auto: #6b8b80;
-	--kdna-chart-series-colour-4--auto: #9db3ab;
-	--kdna-chart-series-colour-5--auto: #c3d2cc;
+	--kdna-chart-series-colour-1--auto: #303030;
+	--kdna-chart-series-colour-2--auto: #5b5b5b;
+	--kdna-chart-series-colour-3--auto: #878787;
+	--kdna-chart-series-colour-4--auto: #b3b3b3;
+	--kdna-chart-series-colour-5--auto: #d4d4d4;
 	--kdna-chart-series-colour-6--auto: #e2e9e6;
 
 	/* Bars and columns */
-	--kdna-chart-bar-colour-strong--auto: #14332c;
-	--kdna-chart-bar-colour-normal--auto: #4a5f58;
-	--kdna-chart-bar-colour-muted--auto: #b6c2bd;
+	--kdna-chart-bar-colour-strong--auto: #303030;
+	--kdna-chart-bar-colour-normal--auto: #5f5f5f;
+	--kdna-chart-bar-colour-muted--auto: #c5c5c5;
 	--kdna-chart-bar-opacity--auto: 1;
 	--kdna-chart-bar-stroke-colour--auto: transparent;
 	--kdna-chart-bar-stroke-width--auto: 0;
@@ -151,7 +151,7 @@
 	/* Value labels printed on or beside a bar */
 	--kdna-chart-value-label-size--auto: 20px;
 	--kdna-chart-value-label-weight--auto: 600;
-	--kdna-chart-value-label-colour--auto: #14332c;
+	--kdna-chart-value-label-colour--auto: #303030;
 	--kdna-chart-value-label-colour-inside--auto: #fff;
 
 	/* Pie and donut */
@@ -159,78 +159,78 @@
 	--kdna-chart-segment-stroke-width--auto: 0;
 	--kdna-chart-segment-label-size--auto: 20px;
 	--kdna-chart-segment-label-weight--auto: 600;
-	--kdna-chart-segment-label-colour--auto: #14332c;
+	--kdna-chart-segment-label-colour--auto: #303030;
 	--kdna-chart-segment-label-colour-inside--auto: #fff;
 	--kdna-chart-segment-centre-size--auto: 64px;
 	--kdna-chart-segment-centre-weight--auto: 700;
-	--kdna-chart-segment-centre-colour--auto: #14332c;
-	--kdna-chart-segment-leader-colour--auto: #9aa8a3;
+	--kdna-chart-segment-centre-colour--auto: #303030;
+	--kdna-chart-segment-leader-colour--auto: #aaaaaa;
 	--kdna-chart-segment-leader-width--auto: 1.5px;
 
 	/* Legend */
 	--kdna-chart-legend-label-size--auto: 20px;
 	--kdna-chart-legend-label-weight--auto: 400;
-	--kdna-chart-legend-label-colour--auto: #4a5f58;
+	--kdna-chart-legend-label-colour--auto: #5f5f5f;
 
 	/* Stat blocks */
 	--kdna-chart-stat-gap--auto: 2rem;
 	--kdna-chart-stat-number-size--auto: clamp( 2.4rem, 6vw, 3.6rem );
 	--kdna-chart-stat-number-weight--auto: 700;
-	--kdna-chart-stat-number-colour--auto: #14332c;
+	--kdna-chart-stat-number-colour--auto: #303030;
 	--kdna-chart-stat-number-leading--auto: 1;
 	--kdna-chart-stat-number-tracking--auto: -0.03em;
 	--kdna-chart-stat-suffix-size--auto: 0.5em;
 	--kdna-chart-stat-suffix-weight--auto: 600;
-	--kdna-chart-stat-suffix-colour--auto: #6b7a75;
+	--kdna-chart-stat-suffix-colour--auto: #7c7c7c;
 	--kdna-chart-stat-label-size--auto: 0.9375rem;
 	--kdna-chart-stat-label-weight--auto: 500;
-	--kdna-chart-stat-label-colour--auto: #6b7a75;
+	--kdna-chart-stat-label-colour--auto: #7c7c7c;
 	--kdna-chart-stat-label-tracking--auto: 0.02em;
 	--kdna-chart-stat-rule-width--auto: 0;
-	--kdna-chart-stat-rule-colour--auto: #d5ddd9;
+	--kdna-chart-stat-rule-colour--auto: #e1e1e1;
 	--kdna-chart-stat-padding--auto: 0;
 
 	/* Markers */
-	--kdna-chart-marker-colour--auto: #6b7a75;
+	--kdna-chart-marker-colour--auto: #7c7c7c;
 	--kdna-chart-marker-width--auto: 2px;
 	--kdna-chart-marker-dash-dashed--auto: 10px 8px;
 	--kdna-chart-marker-dash-dotted--auto: 2px 8px;
 	--kdna-chart-marker-label-size--auto: 20px;
 	--kdna-chart-marker-label-weight--auto: 600;
-	--kdna-chart-marker-label-colour--auto: #14332c;
+	--kdna-chart-marker-label-colour--auto: #303030;
 	--kdna-chart-marker-label-letter-spacing--auto: 0.04em;
 	--kdna-chart-marker-label-transform--auto: none;
 
 	/* Emphasised data points */
 	--kdna-chart-point-radius--auto: 9px;
-	--kdna-chart-point-colour--auto: #14332c;
+	--kdna-chart-point-colour--auto: #303030;
 	--kdna-chart-point-fill-hollow--auto: #fff;
 	--kdna-chart-point-stroke-width--auto: 3.5px;
 	--kdna-chart-point-label-size--auto: 20px;
 	--kdna-chart-point-label-weight--auto: 500;
-	--kdna-chart-point-label-colour--auto: #4a5f58;
+	--kdna-chart-point-label-colour--auto: #5f5f5f;
 
 	/* Callouts */
 	--kdna-chart-callout-value-size-large--auto: 56px;
 	--kdna-chart-callout-value-size-small--auto: 34px;
 	--kdna-chart-callout-value-weight--auto: 700;
-	--kdna-chart-callout-value-colour--auto: #14332c;
+	--kdna-chart-callout-value-colour--auto: #303030;
 	--kdna-chart-callout-value-letter-spacing--auto: -0.02em;
 	--kdna-chart-callout-caption-size--auto: 20px;
 	--kdna-chart-callout-caption-weight--auto: 400;
-	--kdna-chart-callout-caption-colour--auto: #6b7a75;
+	--kdna-chart-callout-caption-colour--auto: #7c7c7c;
 
 	/* Leader lines and span brackets */
-	--kdna-chart-leader-colour--auto: #9aa8a3;
+	--kdna-chart-leader-colour--auto: #aaaaaa;
 	--kdna-chart-leader-width--auto: 1.75px;
 	--kdna-chart-leader-dash--auto: none;
-	--kdna-chart-bracket-colour--auto: #9aa8a3;
+	--kdna-chart-bracket-colour--auto: #aaaaaa;
 	--kdna-chart-bracket-width--auto: 1.75px;
 
 	/* Notes */
 	--kdna-chart-note-size--auto: 20px;
 	--kdna-chart-note-weight--auto: 400;
-	--kdna-chart-note-colour--auto: #8a968f;
+	--kdna-chart-note-colour--auto: #999999;
 	--kdna-chart-note-style--auto: italic;
 
 	/* Placeholder, editors only */

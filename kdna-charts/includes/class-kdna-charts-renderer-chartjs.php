@@ -262,10 +262,10 @@ class KDNA_Charts_Renderer_ChartJS extends KDNA_Charts_Renderer {
 
 		$width    = self::px( $props, '--kdna-chart-line-width-normal', 2.5 );
 		$p_radius = self::px( $props, '--kdna-chart-point-radius', 9 );
-		$p_fill   = self::sv( $props, '--kdna-chart-point-colour', '#14332c' );
+		$p_fill   = self::sv( $props, '--kdna-chart-point-colour', '#303030' );
 		$p_stroke = self::sv( $props, '--kdna-chart-point-fill-hollow', '#ffffff' );
 		$p_width  = self::px( $props, '--kdna-chart-point-stroke-width', 3.5 );
-		$area_bg  = self::rgba( self::sv( $props, '--kdna-chart-area-colour-normal', '#4a5f58' ), 0.16 );
+		$area_bg  = self::rgba( self::sv( $props, '--kdna-chart-area-colour-normal', '#5f5f5f' ), 0.16 );
 
 		$palette  = $this->palette( $props );
 		$datasets = array();
@@ -390,7 +390,7 @@ class KDNA_Charts_Renderer_ChartJS extends KDNA_Charts_Renderer {
 		$font_family  = self::sv( $props, '--kdna-chart-font-family', 'Montserrat, Helvetica, Arial, sans-serif' );
 		$axis_size    = self::px( $props, '--kdna-chart-axis-label-size', 18 );
 		$legend_size  = self::px( $props, '--kdna-chart-legend-label-size', 20 );
-		$legend_colour = self::sv( $props, '--kdna-chart-legend-label-colour', '#4a5f58' );
+		$legend_colour = self::sv( $props, '--kdna-chart-legend-label-colour', '#5f5f5f' );
 
 		$out = array(
 			'responsive'          => true,
@@ -453,9 +453,9 @@ class KDNA_Charts_Renderer_ChartJS extends KDNA_Charts_Renderer {
 
 	/** Cartesian scales for line, area, bar and column. */
 	private function build_scales( $type, array $props, $font_family, $font_size ) {
-		$grid_colour  = self::sv( $props, '--kdna-chart-gridline-colour', '#d5ddd9' );
-		$tick_colour  = self::sv( $props, '--kdna-chart-axis-label-colour', '#4a5f58' );
-		$title_colour = self::sv( $props, '--kdna-chart-axis-title-colour', '#6b7a75' );
+		$grid_colour  = self::sv( $props, '--kdna-chart-gridline-colour', '#e1e1e1' );
+		$tick_colour  = self::sv( $props, '--kdna-chart-axis-label-colour', '#5f5f5f' );
+		$title_colour = self::sv( $props, '--kdna-chart-axis-title-colour', '#7c7c7c' );
 		$title_size   = self::px( $props, '--kdna-chart-axis-title-size', 16 );
 
 		$axes    = isset( $this->definition['axes'] ) && is_array( $this->definition['axes'] ) ? $this->definition['axes'] : array();
@@ -508,7 +508,7 @@ class KDNA_Charts_Renderer_ChartJS extends KDNA_Charts_Renderer {
 	 * matches the stylesheet's own fallback.
 	 */
 	private function palette( array $props ) {
-		$defaults = array( '#14332c', '#4a5f58', '#6b7a75', '#9aa8a2', '#c2cdc8', '#8a635a' );
+		$defaults = array( '#303030', '#5f5f5f', '#7c7c7c', '#aaaaaa', '#d0d0d0', '#8a635a' );
 		$palette  = array();
 		for ( $i = 1; $i <= 6; $i++ ) {
 			$palette[] = self::sv( $props, '--kdna-chart-series-colour-' . $i, $defaults[ $i - 1 ] );
