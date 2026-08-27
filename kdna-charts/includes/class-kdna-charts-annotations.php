@@ -108,6 +108,14 @@ class KDNA_Charts_Annotations {
 	/** Line height as a multiple of the font size. */
 	const LINE_HEIGHT = 1.25;
 
+	/**
+	 * How far a callout's caption sits below its figure, as a multiple of
+	 * the figure's font size. Tighter than a full line, because the caption
+	 * belongs to the figure above it and reads as one block with it. At the
+	 * full line height it floated, disconnected.
+	 */
+	const CALLOUT_CAPTION_LEAD = 0.92;
+
 	/** Gap between a marker line and its heading. */
 	const MARKER_LABEL_GAP = 12;
 
@@ -550,11 +558,29 @@ class KDNA_Charts_Annotations {
 				$this->text_width( $value, $value_size, true ),
 				$this->text_width( $caption, $caption_size )
 			);
-			$height = $value_size * self::LINE_HEIGHT
-				+ ( '' !== $caption ? $caption_size * self::LINE_HEIGHT : 0 );
+			$height = ( '' !== $caption )
+				? $value_size * self::CALLOUT_CAPTION_LEAD + $caption_size * self::LINE_HEIGHT
+				: $value_size * self::LINE_HEIGHT;
 
 			$box = $this->find_room( $anchor['centre'], $width, $height );
 			$this->reserve( $box );
+
+			/*
+			 * When the placer has to move a callout well clear of its
+			 * anchor, a dense bar chart with no room beside the mark, a
+			 * floating figure reads as disconnected from what it describes.
+			 * So a leader back to the anchor is drawn even when none was
+			 * asked for, but only once the callout has genuinely been pushed
+			 * beyond the ring of near positions. A callout sitting right
+			 * beside its mark still honours "none".
+			 */
+			if ( 'none' === $leader ) {
+				$box_centre = array( ( $box[0] + $box[2] ) / 2, ( $box[1] + $box[3] ) / 2 );
+				$reach      = hypot( $box_centre[0] - $anchor['centre'][0], $box_centre[1] - $anchor['centre'][1] );
+				if ( $reach > self::CALLOUT_DISTANCE_FAR + max( $width, $height ) / 2 ) {
+					$leader = $anchor['is_span'] ? 'elbow' : 'straight';
+				}
+			}
 
 			/*
 			 * The leader is drawn first so the text sits over it rather
@@ -588,7 +614,7 @@ class KDNA_Charts_Annotations {
 					array(
 						'class'             => KDNA_Charts_Renderer::css( 'callout-caption', array( $size ) ),
 						'x'                 => $centre_x,
-						'y'                 => $box[1] + $value_size * self::LINE_HEIGHT,
+						'y'                 => $box[1] + $value_size * self::CALLOUT_CAPTION_LEAD,
 						'text-anchor'       => 'middle',
 						'dominant-baseline' => 'hanging',
 					),
@@ -671,7 +697,11 @@ class KDNA_Charts_Annotations {
 			return $this->bracket( $box, $anchor, $edge, $style );
 		}
 
-		$target = $anchor['centre'];
+		// Keep the target inside the plot. A callout anchored just outside
+		// it, a hand-tuned x sitting before the first category, would
+		// otherwise draw a leader shooting off the top or side of the chart
+		// to a point no reader can see.
+		$target = $this->clamp_to_plot( $anchor['centre'] );
 		$d      = ( 'elbow' === $style )
 			? $this->elbow_path( $edge, $target )
 			: 'M ' . $this->xy( $edge ) . ' L ' . $this->xy( $target );
@@ -1107,24 +1137,49 @@ class KDNA_Charts_Annotations {
 		$best       = null;
 		$best_score = INF;
 
+		$consider = function ( $cx, $cy ) use ( &$best, &$best_score, $anchor, $width, $height ) {
+			$box = array(
+				$cx - $width / 2,
+				$cy - $height / 2,
+				$cx + $width / 2,
+				$cy + $height / 2,
+			);
+			$score = $this->score_box( $box, $anchor );
+			if ( $score < $best_score ) {
+				$best_score = $score;
+				$best       = $box;
+			}
+		};
+
+		// First choice: a ring of positions close to the anchor, so a
+		// callout that can sit beside what it points at does.
 		foreach ( array( self::CALLOUT_DISTANCE_NEAR, self::CALLOUT_DISTANCE_FAR ) as $distance ) {
 			foreach ( $directions as $direction ) {
 				$length = sqrt( $direction[0] * $direction[0] + $direction[1] * $direction[1] );
-				$cx     = $anchor[0] + ( $direction[0] / $length ) * ( $distance + $width / 2 );
-				$cy     = $anchor[1] + ( $direction[1] / $length ) * ( $distance + $height / 2 );
-
-				$box = array(
-					$cx - $width / 2,
-					$cy - $height / 2,
-					$cx + $width / 2,
-					$cy + $height / 2,
+				$consider(
+					$anchor[0] + ( $direction[0] / $length ) * ( $distance + $width / 2 ),
+					$anchor[1] + ( $direction[1] / $length ) * ( $distance + $height / 2 )
 				);
+			}
+		}
 
-				$score = $this->score_box( $box, $anchor );
-				if ( $score < $best_score ) {
-					$best_score = $score;
-					$best       = $box;
-				}
+		/*
+		 * The ring reaches only as far as CALLOUT_DISTANCE_FAR from the
+		 * anchor. On a dense chart, a bar chart especially, the only clear
+		 * space can be further off than that, so the ring settles for
+		 * sitting on a bar. A coarse grid over the whole canvas gives the
+		 * placer somewhere else to go: score_box still prefers the box
+		 * nearest the anchor, so an empty corner is chosen only when the
+		 * near positions are all covered, and the leader line the callout
+		 * can carry is what ties it back to what it points at.
+		 */
+		$canvas = $this->scale->canvas();
+		$step   = max( 24, min( $width, $height ) / 2 );
+		$half_w = $width / 2;
+		$half_h = $height / 2;
+		for ( $cx = $half_w; $cx <= $canvas['width'] - $half_w; $cx += $step ) {
+			for ( $cy = $half_h; $cy <= $canvas['height'] - $half_h; $cy += $step ) {
+				$consider( $cx, $cy );
 			}
 		}
 
@@ -1230,6 +1285,18 @@ class KDNA_Charts_Annotations {
 		$canvas = $this->scale->canvas();
 		return $box[0] >= 0 && $box[1] >= 0
 			&& $box[2] <= $canvas['width'] && $box[3] <= $canvas['height'];
+	}
+
+	/**
+	 * A point clamped to the plot area, so a leader always ends somewhere
+	 * inside the chart rather than off its edge.
+	 */
+	private function clamp_to_plot( array $point ) {
+		$plot = $this->scale->plot_area();
+		return array(
+			max( $plot['x'], min( $plot['right'], $point[0] ) ),
+			max( $plot['y'], min( $plot['bottom'], $point[1] ) ),
+		);
 	}
 
 	private function reserve( array $box ) {
