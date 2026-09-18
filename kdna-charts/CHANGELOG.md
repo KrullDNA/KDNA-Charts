@@ -4,6 +4,19 @@ All notable changes to KDNA Charts are recorded here. The plugin follows
 semantic versioning: patch releases fix bugs, minor releases add features
 without breaking existing charts, major releases may change the schema.
 
+## 1.0.4
+
+- **Maximum Width and Alignment now hold against the theme.** A chart is a
+  `<figure>`, and many themes style figures in post content with a rule
+  that out-specifies the plugin, forcing the chart back to full width. When
+  that happened the Maximum Width was ignored, and because a full-width
+  chart has no spare room, Alignment looked dead too — the two failed
+  together. The frame's own width and margins are now marked important, so
+  a chart set to 50% and centred is 50% and centred wherever it sits. The
+  values still come from the responsive controls, so per-breakpoint widths
+  are unaffected; only which stylesheet wins is settled, in the plugin's
+  favour for the frame it draws.
+
 ## 1.0.3
 
 - **Pie and donut no longer carry empty bands.** A circle is square, but

@@ -617,10 +617,28 @@
  * ------------------------------------------------------------------ */
 
 .kdna-chart {
-	display: block;
-	max-width: var( --_kdna-chart-max-width );
-	margin-block: var( --_kdna-chart-margin-block );
-	margin-inline: var( --_kdna-chart-margin-inline );
+	/*
+	 * The frame's own size and placement are marked important, and only
+	 * these four are.
+	 *
+	 * A chart is almost always a <figure>, and themes style figures in the
+	 * content: a great many set `figure { max-width: 100% }` or centre or
+	 * float them, with a selector like `.entry-content figure` that
+	 * out-specifies a single class. When that theme rule wins, the frame's
+	 * Maximum Width is ignored and the chart fills the column, and with no
+	 * spare room the Alignment control has nothing to centre or push, so it
+	 * appears dead too. The two controls fail together, from one cause.
+	 *
+	 * The important is on the property, not on a fixed value: the value is
+	 * still read from the --_ variable, which the media queries below
+	 * rewrite per breakpoint, so a chart set narrower on desktop than on a
+	 * phone still behaves. It only settles which stylesheet wins, and for a
+	 * frame the plugin draws, that is the plugin.
+	 */
+	display: block !important;
+	max-width: var( --_kdna-chart-max-width ) !important;
+	margin-block: var( --_kdna-chart-margin-block ) !important;
+	margin-inline: var( --_kdna-chart-margin-inline ) !important;
 	padding: var( --_kdna-chart-padding );
 	background: var( --_kdna-chart-background );
 	/*
