@@ -1074,11 +1074,13 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 			'' === $legend_place ? '' : $this->legend( $segments, $layout ),
 		);
 
+		$view = $this->radial_view_box( $canvas, $plot, $layout, $segments, $labels_mode );
+
 		$svg = self::tag(
 			'svg',
 			array(
 				'class'           => self::css( 'svg' ),
-				'viewBox'         => '0 0 ' . KDNA_Charts_Scale::round_coord( $canvas['width'] ) . ' ' . KDNA_Charts_Scale::round_coord( $canvas['height'] ),
+				'viewBox'         => $view,
 				'width'           => '100%',
 				'role'            => 'img',
 				'aria-labelledby' => $title_id . ' ' . $desc_id,
@@ -1090,6 +1092,62 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		);
 
 		return self::tag( 'div', array( 'class' => self::css( 'frame' ) ), $svg );
+	}
+
+	/**
+	 * The viewBox for a radial chart, cropped to the height its content
+	 * actually uses.
+	 *
+	 * A pie or a donut is square, but the frame is 16:9 like every other
+	 * chart, and a wide legend beside the circle squeezes it narrower
+	 * still. Both leave the circle shorter than the canvas is tall, so the
+	 * canvas would otherwise carry a band of empty space above and below
+	 * the chart. Rather than centre a small circle in a tall box, the
+	 * viewBox is moved and shortened to sit snugly around the drawn
+	 * content: the circle, any outside labels, and the legend. The width
+	 * is left alone, so the chart still fills the column it sits in.
+	 *
+	 * @return string A viewBox value, "minX minY width height".
+	 */
+	protected function radial_view_box( array $canvas, array $plot, array $layout, array $segments, $labels_mode ) {
+		$top    = $layout['cy'] - $layout['radius'];
+		$bottom = $layout['cy'] + $layout['radius'];
+
+		// Outside labels stand off the circle on leaders, so the topmost
+		// and bottommost reach past it by the leader run and a line of text.
+		if ( 'outside' === $labels_mode ) {
+			$reach   = $layout['radius'] * ( self::PIE_LEADER_OUT - 1 )
+				+ KDNA_Charts_Scale::ASSUMED_LABEL_SIZE * KDNA_Charts_Scale::LABEL_LINE_HEIGHT;
+			$top    -= $reach;
+			$bottom += $reach;
+		}
+
+		$place = $layout['legend_place'];
+		if ( in_array( $place, array( 'left', 'right' ), true ) ) {
+			// Centred on the circle, so it grows the content symmetrically.
+			$half    = count( $segments ) * self::LEGEND_ROW / 2;
+			$top     = min( $top, $layout['cy'] - $half );
+			$bottom  = max( $bottom, $layout['cy'] + $half );
+		} elseif ( 'top' === $place ) {
+			$top = min( $top, $plot['y'] );
+		} elseif ( 'bottom' === $place ) {
+			$bottom = max( $bottom, $plot['bottom'] );
+		}
+
+		$pad    = KDNA_Charts_Scale::EDGE_INSET * 2;
+		$top    = max( 0.0, $top - $pad );
+		$bottom = min( (float) $canvas['height'], $bottom + $pad );
+		$height = max( 10.0, $bottom - $top );
+
+		// Never taller than the frame the chart was laid out in.
+		if ( $height >= (float) $canvas['height'] ) {
+			$top    = 0.0;
+			$height = (float) $canvas['height'];
+		}
+
+		return '0 ' . KDNA_Charts_Scale::round_coord( $top )
+			. ' ' . KDNA_Charts_Scale::round_coord( $canvas['width'] )
+			. ' ' . KDNA_Charts_Scale::round_coord( $height );
 	}
 
 	/**
