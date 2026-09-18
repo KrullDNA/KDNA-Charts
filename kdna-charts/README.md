@@ -5,7 +5,7 @@ of chart that belongs inside an article, a chart that makes an argument,
 rather than the kind that belongs on a dashboard.
 
 - **Slug:** `kdna-charts`
-- **Version:** 1.0.4
+- **Version:** 1.0.5
 - **Requires:** WordPress 6.0, PHP 8.0
 - **Build stage:** 13 of 13 — complete
 

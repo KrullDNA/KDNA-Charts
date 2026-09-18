@@ -4,6 +4,16 @@ All notable changes to KDNA Charts are recorded here. The plugin follows
 semantic versioning: patch releases fix bugs, minor releases add features
 without breaking existing charts, major releases may change the schema.
 
+## 1.0.5
+
+- **Clearer default palette.** The six-tone series ramp is now evenly
+  spaced in pure grey, from `#2e2e2e` to `#d3d3d3`, so neighbouring slices
+  of a pie or donut and neighbouring bars are easier to tell apart. The old
+  ramp crowded its light end and left the fourth tone washed out on white,
+  and its lightest tone carried a faint green tint left over from the
+  original palette; both are gone. A chart that set its own series colours
+  is unaffected — only the defaults changed.
+
 ## 1.0.4
 
 - **Maximum Width and Alignment now hold against the theme.** A chart is a

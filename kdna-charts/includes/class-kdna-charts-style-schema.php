@@ -1136,7 +1136,7 @@ class KDNA_Charts_Style_Schema {
 		 * these six and gets them, which is why they are six plain
 		 * controls rather than one generated scale.
 		 */
-		$ramp_defaults = array( '#303030', '#5b5b5b', '#878787', '#b3b3b3', '#d4d4d4', '#e2e9e6' );
+		$ramp_defaults = array( '#2e2e2e', '#4f4f4f', '#707070', '#919191', '#b2b2b2', '#d3d3d3' );
 		foreach ( $ramp_defaults as $index => $default ) {
 			$number = $index + 1;
 

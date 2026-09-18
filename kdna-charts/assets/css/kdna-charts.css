@@ -133,12 +133,12 @@
 	 * degrees of the same thing. A site that needs distinct hues sets
 	 * these six and gets them.
 	 */
-	--kdna-chart-series-colour-1--auto: #303030;
-	--kdna-chart-series-colour-2--auto: #5b5b5b;
-	--kdna-chart-series-colour-3--auto: #878787;
-	--kdna-chart-series-colour-4--auto: #b3b3b3;
-	--kdna-chart-series-colour-5--auto: #d4d4d4;
-	--kdna-chart-series-colour-6--auto: #e2e9e6;
+	--kdna-chart-series-colour-1--auto: #2e2e2e;
+	--kdna-chart-series-colour-2--auto: #4f4f4f;
+	--kdna-chart-series-colour-3--auto: #707070;
+	--kdna-chart-series-colour-4--auto: #919191;
+	--kdna-chart-series-colour-5--auto: #b2b2b2;
+	--kdna-chart-series-colour-6--auto: #d3d3d3;
 
 	/* Bars and columns */
 	--kdna-chart-bar-colour-strong--auto: #303030;
