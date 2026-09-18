@@ -4,6 +4,19 @@ All notable changes to KDNA Charts are recorded here. The plugin follows
 semantic versioning: patch releases fix bugs, minor releases add features
 without breaking existing charts, major releases may change the schema.
 
+## 1.0.3
+
+- **Pie and donut no longer carry empty bands.** A circle is square, but
+  the frame is 16:9 like every chart, and a legend beside the circle
+  narrows it further, so the canvas was left with a tall strip of empty
+  space above and below the chart. The radial viewBox is now cropped to the
+  height its content actually uses — the circle, its labels and the legend
+  — so the chart sits snugly in its frame instead of floating in a band of
+  white. The width is untouched, so it still fills its column.
+
+No schema change. Existing pie and donut charts pick up the tighter frame
+on the next render, with no edit to their JSON.
+
 ## 1.0.2
 
 - **Alignment fixed.** The frame Alignment control wrote four-value margin

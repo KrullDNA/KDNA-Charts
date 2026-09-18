@@ -2,7 +2,7 @@
 /**
  * Plugin Name: KDNA Charts
  * Description: An editorial charting plugin. A reusable chart library as a custom post type, with a server rendered SVG engine, a full annotation layer, an Elementor widget, a shortcode and a global styling page.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: KDNA
  * Text Domain: kdna-charts
  * Domain Path: /languages
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KDNA_CHARTS_VERSION', '1.0.2' );
+define( 'KDNA_CHARTS_VERSION', '1.0.3' );
 define( 'KDNA_CHARTS_FILE', __FILE__ );
 define( 'KDNA_CHARTS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'KDNA_CHARTS_URL', plugin_dir_url( __FILE__ ) );
