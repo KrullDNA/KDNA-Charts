@@ -139,6 +139,7 @@ class KDNA_Charts_Admin {
 		foreach ( $columns as $key => $label ) {
 			$new[ $key ] = $label;
 			if ( 'title' === $key ) {
+				$new['kdna_used_in']     = __( 'Used in', 'kdna-charts' );
 				$new['kdna_type']        = __( 'Type', 'kdna-charts' );
 				$new['kdna_engine']      = __( 'Engine', 'kdna-charts' );
 				$new['kdna_points']      = __( 'Data points', 'kdna-charts' );
@@ -151,6 +152,15 @@ class KDNA_Charts_Admin {
 
 	public static function render_list_column( $column, $post_id ) {
 		switch ( $column ) {
+			case 'kdna_used_in':
+				$used_in = (string) get_post_meta( $post_id, KDNA_Charts_CPT::META_USED_IN, true );
+				if ( '' === trim( $used_in ) ) {
+					self::render_empty_cell( __( 'Not set', 'kdna-charts' ) );
+					break;
+				}
+				echo esc_html( $used_in );
+				break;
+
 			case 'kdna_type':
 				$type  = KDNA_Charts_CPT::get_type( $post_id );
 				$label = KDNA_Charts_Data::type_label( $type );

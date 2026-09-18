@@ -1010,6 +1010,34 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 	 * segment starts at" and never thinks about it again.
 	 */
 
+	/**
+	 * Whether every outside label fits within the plot beside the circle.
+	 *
+	 * PHP cannot measure text, so this is the same rough estimate the rest
+	 * of the renderer makes: characters times a width fraction times the
+	 * assumed label size. The circle sits centred, so the room a side label
+	 * has is half the plot width less the circle, its leader and the gap.
+	 * When the widest label needs more than that, the labels do not fit.
+	 */
+	protected function outside_labels_fit( array $segments, array $plot ) {
+		$widest = 0.0;
+		foreach ( $segments as $segment ) {
+			$text = $this->share_text( $segment, true );
+			$w    = mb_strlen( $text ) * 0.6 * KDNA_Charts_Scale::ASSUMED_LABEL_SIZE;
+			if ( $w > $widest ) {
+				$widest = $w;
+			}
+		}
+		if ( $widest <= 0.0 ) {
+			return true;
+		}
+
+		$radius = min( $plot['width'], $plot['height'] ) / 2 * self::PIE_OUTSIDE_FACTOR;
+		$needed = $radius * self::PIE_LEADER_OUT + self::PIE_LEADER_ELBOW + self::PIE_LABEL_GAP + $widest;
+
+		return $needed <= $plot['width'] / 2;
+	}
+
 	protected function render_radial() {
 		$segments = $this->radial_segments();
 		if ( empty( $segments ) ) {
@@ -1021,6 +1049,18 @@ class KDNA_Charts_Renderer_SVG extends KDNA_Charts_Renderer {
 		$plot   = $frame['plot'];
 
 		$labels_mode  = $this->one_of( $this->option( 'labels', 'outside' ), KDNA_Charts_Schema::PIE_LABELS, 'outside' );
+
+		/*
+		 * Outside labels need horizontal room the circle does not leave when
+		 * the category names are long, and a 16:9 frame has only so much of
+		 * it. Rather than let a label run off the edge of the chart, or
+		 * shrink the circle to a dot to make it fit, fall back to a legend,
+		 * which is where long category names belong anyway.
+		 */
+		if ( 'outside' === $labels_mode && ! $this->outside_labels_fit( $segments, $plot ) ) {
+			$labels_mode = 'legend';
+		}
+
 		$legend_place = $this->legend_placement( $labels_mode );
 
 		$layout = $this->radial_layout( $plot, $segments, $labels_mode, $legend_place );

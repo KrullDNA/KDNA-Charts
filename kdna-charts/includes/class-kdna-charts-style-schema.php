@@ -597,10 +597,15 @@ class KDNA_Charts_Style_Schema {
 					 * silently threw the other away, so the frame's vertical
 					 * space has a property of its own below.
 					 */
+					/*
+					 * These are margin-inline values, start then end, not
+					 * the four-sided margin shorthand. margin-inline: 0 auto
+					 * is left aligned, auto is centred, auto 0 is right.
+					 */
 					'value_map'  => array(
-						'left'   => '0 auto 0 0',
-						'center' => '0 auto',
-						'right'  => '0 0 0 auto',
+						'left'   => '0 auto',
+						'center' => 'auto',
+						'right'  => 'auto 0',
 					),
 					'responsive' => true,
 				)

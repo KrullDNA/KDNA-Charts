@@ -31,6 +31,9 @@ class KDNA_Charts_CPT {
 	const META_CAPTION        = '_kdna_chart_caption';
 	const META_SCHEMA         = '_kdna_chart_schema_version';
 	const META_CONTENT_HASH   = '_kdna_chart_content_hash';
+	/* Where the chart is used, a free-text note of the article or page it
+	   appears in. Editorial bookkeeping, not part of the chart definition. */
+	const META_USED_IN        = '_kdna_chart_used_in';
 
 	/*
 	 * Structured meta, stored JSON encoded.
@@ -145,6 +148,7 @@ class KDNA_Charts_CPT {
 			self::META_CAPTION => array( 'string', 'wp_kses_post' ),
 			self::META_SCHEMA  => array( 'integer', 'absint' ),
 			self::META_CONTENT_HASH => array( 'string', 'sanitize_text_field' ),
+			self::META_USED_IN => array( 'string', 'sanitize_text_field' ),
 		);
 
 		foreach ( $scalars as $meta_key => $spec ) {

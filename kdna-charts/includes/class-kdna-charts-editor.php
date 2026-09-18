@@ -112,6 +112,36 @@ class KDNA_Charts_Editor {
 			'side',
 			'default'
 		);
+
+		add_meta_box(
+			'kdna_charts_used_in',
+			__( 'Used in', 'kdna-charts' ),
+			array( __CLASS__, 'render_used_in_meta_box' ),
+			$type,
+			'side',
+			'default'
+		);
+	}
+
+	/**
+	 * A free-text note of the article or page this chart appears in.
+	 *
+	 * Editorial bookkeeping rather than part of the chart definition, so it
+	 * lives in its own meta box and saves on its own in save_post, ahead of
+	 * the chart-state guard, so it is kept even on a save where the chart
+	 * editor's own state did not come through.
+	 */
+	public static function render_used_in_meta_box( $post ) {
+		$value = (string) get_post_meta( (int) $post->ID, KDNA_Charts_CPT::META_USED_IN, true );
+		printf(
+			'<p><label for="kdna_used_in" class="screen-reader-text">%1$s</label>'
+			. '<input type="text" id="kdna_used_in" name="kdna_used_in" value="%2$s" class="widefat" placeholder="%3$s" /></p>'
+			. '<p class="description">%4$s</p>',
+			esc_html__( 'Article or page this chart appears in', 'kdna-charts' ),
+			esc_attr( $value ),
+			esc_attr__( 'e.g. Menopause and skin, part two', 'kdna-charts' ),
+			esc_html__( 'The article or page this chart is used in. It shows as a column in the charts list, so you can tell at a glance where each chart is used.', 'kdna-charts' )
+		);
 	}
 
 	public static function render_nonce_field() {
@@ -662,6 +692,17 @@ class KDNA_Charts_Editor {
 		}
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
+		}
+
+		// The "Used in" note is editorial bookkeeping, not part of the chart
+		// definition, so it is saved here ahead of the chart-state guard and
+		// is kept even when the editor's own state did not come through.
+		if ( isset( $_POST['kdna_used_in'] ) ) {
+			update_post_meta(
+				$post_id,
+				KDNA_Charts_CPT::META_USED_IN,
+				sanitize_text_field( wp_unslash( $_POST['kdna_used_in'] ) )
+			);
 		}
 
 		$raw = isset( $_POST[ self::STATE_INPUT ] ) ? wp_unslash( $_POST[ self::STATE_INPUT ] ) : '';

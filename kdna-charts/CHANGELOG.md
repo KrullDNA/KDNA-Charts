@@ -4,6 +4,21 @@ All notable changes to KDNA Charts are recorded here. The plugin follows
 semantic versioning: patch releases fix bugs, minor releases add features
 without breaking existing charts, major releases may change the schema.
 
+## 1.0.2
+
+- **Alignment fixed.** The frame Alignment control wrote four-value margin
+  shorthand into `margin-inline`, which takes two values, so Centre came out
+  left aligned and Left and Right did nothing. It now writes valid logical
+  values, so a chart narrower than its column aligns left, centre or right as
+  chosen, per breakpoint.
+- **Pie and donut outside labels no longer overflow the frame.** When the
+  category names are too long to fit beside the circle, the chart now falls
+  back to a legend instead of running the labels off the edge or shrinking
+  the circle to a dot. Short labels still sit outside as before.
+- **"Used in" field.** Each chart now has a free-text "Used in" note on its
+  edit screen, for the article or page it appears in, shown as a column in
+  the charts list so it is easy to tell which chart is which.
+
 ## 1.0.1
 
 Fixes to callout rendering, found on a dense bar chart where the callout
